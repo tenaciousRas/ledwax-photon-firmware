@@ -48,6 +48,6 @@ Atom is the second (unsupported) IDE:
 ####Credits
 Thanks to all the contributors who made this software possible.
 
-Adafruit (http://www.adafruit.com) for help with I2C and WS2801 libraries.
+Adafruit (http://www.adafruit.com) for I2C and WS2801 libraries.
 
 Based on the open-source ledstrip-home Arduino sketch (https://github.com/tenaciousRas/ledstrip-home/).
