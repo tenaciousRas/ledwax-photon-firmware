@@ -1,0 +1,13 @@
+#!/bin/sh
+
+APPSRC_DIR=/path/to/app
+APPBLD_DIR=/path/to/app/build
+
+PATH=$PATH:/opt/gcc-arm-none-eabi-4_9-2015q3/bin
+
+cd ../../spark-core/spark-core-firmware/build
+# ln -s ../../../../photon-projects/ledwax-photon ../user/applications/ledwax-photon
+make PLATFORM=PHOTON APPDIR=$APPSRC_DIR TARGET_DIR=$APPBLD_DIR
+RES=$?
+# rm ../applications/ledwax-photon
+exit $RES
