@@ -24,4 +24,14 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<variableList>
+		<variable>
+			<name>PARTICLE_FIRMWARE_BUILD</name>
+			<value>file:/opt/spark-core/spark-core-firmware/build</value>
+		</variable>
+		<variable>
+			<name>PARTICLE_FIRMWARE_LOC</name>
+			<value>file:/opt/spark-core/spark-core-firmware</value>
+		</variable>
+	</variableList>
 </projectDescription>

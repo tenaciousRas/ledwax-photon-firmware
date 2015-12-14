@@ -35,12 +35,12 @@ LEDWax-Photon is a C/C++ project targeted at ARM GNU EABI cross-tools compiling,
 
 I've configured the application for two IDEs, AtomIDE and Eclipse.
 
-Eclipse is the primary IDE supported:
+Eclipse is the primary IDE (supported):
 - Eclipse Mars C/C++ IDE
 - GNU ARM EABI plugin from https://gnuarmeclipse.github.io/
 
-Atom is the second (unsupported) IDE:
-- .atom-build.json to configure build shell script
+Atom is the secondary (unsupported) IDE:
+- .atom-build.json is provided to assist in configuring build shell script
 
 #### TODO
 - Example circuit with example sketch config
@@ -48,6 +48,6 @@ Atom is the second (unsupported) IDE:
 ####Credits
 Thanks to all the contributors who made this software possible.
 
-Adafruit (http://www.adafruit.com) for I2C and WS2801 libraries.
+Adafruit (http://www.adafruit.com) for help with I2C and WS2801 libraries.
 
 Based on the open-source ledstrip-home Arduino sketch (https://github.com/tenaciousRas/ledstrip-home/).
