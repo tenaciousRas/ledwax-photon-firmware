@@ -40,14 +40,16 @@
 //#include <SPI.h>
 #include "lib/spark-flashee-eeprom/flashee-eeprom.h"
 #include "lib/neopixel/neopixel.h"
-#include <stdio>
 #include <sstream>
 #include <string>
 #include <iostream>
 #include <vector>
+#include "wiring/inc/spark_wiring_cloud.h"
+#include "wiring/inc/spark_wiring.h"
 #include "application.h"
 
 using namespace std;
+using namespace Flashee;
 
 #define _VERSION 5  // it's probably more like v.100
 #define DEBUG_MODE 1
@@ -140,10 +142,11 @@ int ledFadeStepIndex[NUM_STRIPS];  // color distance divided by LED_FADE_STEPS
 double ledFadeStep[NUM_STRIPS][NUM_LEDS_SPARKFUN_WS2801_1METER][3]; // 3 for each RGB component
 uint8_t rainbowStepIndex[NUM_STRIPS] = { 0, 0 };
 
+FlashDevice* flash;
 int eepromAddyStripState = 4;  // eeprom addy to store strip state
 
-uint8_t numStrips = NUM_STRIPS;
-string stripStateJSON;
+int numStrips = NUM_STRIPS;
+String stripStateJSON;
 
 void setup() {
 	// set the data rate for bt device
@@ -151,11 +154,13 @@ void setup() {
 #ifdef DEBUG_MODE
 //  //Serial.print(F("startup\n"));
 #endif
+	// init eeprom
+	flash = Devices::createDefaultStore();
 	// set callback functions
 	Particle.function("setLEDParams", setLEDParams);
 	// set vars
-	Particle.variable("numStrips", numStrips, INTEGER);
-	Particle.variable("stripStateJSON", stripStateJSON, STRING);
+	Particle.variable("numStrips", &numStrips, INT);
+	Particle.variable("stripStateJSON", &stripStateJSON, STRING);
 #ifdef DEBUG_MODE
 //  //Serial.print(F("configured bt\n"));
 #endif
@@ -247,15 +252,15 @@ void readStripState(led_strip_disp_state* ret) {
 	ret->fading = false;
 	ret->multiColorAltState = INITIAL_MULTI_COLOR_ALT_STATE
 	;
-	bData = EEPROM.read(offset++);
+	flash->read(bData, offset++);
 	ret->dispMode = (uint8_t) bData;
-	bData = EEPROM.read(offset++);
+	flash->read(bData, offset++);
 	ret->ledFadeMode = (uint8_t) bData;
 	unsigned long color;
 	for (int i = 0; i < 3; i++) {
 		color = 0;
 		for (int j = 3; j >= 0; j--) {
-			bData = EEPROM.read(offset++);
+			flash->read(bData, offset++);
 			color += (bData << (8 * j));
 		}
 		ret->ledModeColor[i] = color;
@@ -263,14 +268,14 @@ void readStripState(led_strip_disp_state* ret) {
 	unsigned long holdTime;
 	holdTime = 0;
 	for (int j = 3; j >= 0; j--) {
-		bData = EEPROM.read(offset++);
+		flash->read(bData, offset++);
 		holdTime += (bData << (8 * j));
 	}
 	ret->multiColorHoldTime = holdTime;
 	unsigned int storedLedStripBrightness;
 	storedLedStripBrightness = 0;
 	for (int j = 1; j >= 0; j--) {
-		bData = EEPROM.read(offset++);
+		flash->read(bData, offset++);
 		storedLedStripBrightness += (bData << (8 * j));
 	}
 	ret->ledStripBrightness = (float) storedLedStripBrightness / (float) 1024;
@@ -286,42 +291,44 @@ void putStripState(led_strip_disp_state* lsds) {
 	readStripState(&storedState);
 	unsigned int offset = eepromAddyStripState + sizeof(int); // store int at addy 0
 	if ((unsigned int) storedState.dispMode != (unsigned int) lsds->dispMode) {
-		EEPROM.write(offset, (uint8_t) lsds->dispMode);
+		// store byte
+		flash->write((uint8_t) lsds->dispMode, offset++);
 	}
 	offset++;
 	if (storedState.ledFadeMode != lsds->ledFadeMode) {
-		EEPROM.write(offset, (uint8_t) lsds->ledFadeMode);
+		// store byte
+		flash->write((uint8_t) lsds->ledFadeMode, offset++);
 	}
 	offset++;
 	for (int i = 0; i < 3; i++) {
 		if (storedState.ledModeColor[i] != lsds->ledModeColor[i]) {
+			// store long
 			for (int j = 3; j >= 0; j--) {
-				EEPROM.write(offset++,
-						(uint8_t) ((lsds->ledModeColor[i] >> (8 * j)) & 0xFF));
+				flash->write(((uint8_t) ((lsds->ledModeColor[i] >> (8 * j)) & 0xFF)), offset++);
 			}
 		} else {
 			offset += 4;
 		}
 	}
 	if (storedState.multiColorHoldTime != lsds->multiColorHoldTime) {
+		// store long
 		for (int j = 3; j >= 0; j--) {
-			EEPROM.write(offset++,
-					(uint8_t) ((lsds->multiColorHoldTime >> (8 * j)) & 0xFF));
+			flash->write(((uint8_t) ((lsds->multiColorHoldTime >> (8 * j)) & 0xFF)), offset++);
 		}
 	} else {
 		offset += 4;
 	}
 	if (storedState.ledStripBrightness != lsds->ledStripBrightness) {
-		// store an int
+		// store int
 		unsigned int lsb = lsds->ledStripBrightness * 1024;
 		for (int j = 1; j >= 0; j--) {
-			EEPROM.write(offset++, (uint8_t) ((lsb >> (8 * j)) & 0xFF));
+			flash->write(((uint8_t) ((lsb >> (8 * j)) & 0xFF)), offset++);
 		}
 	} else {
 		offset += 2;
 	}
 	// update strip state watchvar
-	stripStateJSON = buildStripStateJSON();
+	stripStateJSON = buildStripStateJSON().c_str();
 	Particle.publish("ledStripDisplayState", stripStateJSON);
 #ifdef DEBUG_MODE
 //  //Serial.print(F("write eeprom done\n"));
@@ -376,8 +383,8 @@ void setDispModeColors(uint8_t stripNum, int mode) {
 		stripState[stripNum].ledModeColor[1] = TWBLUE;
 		break;
 	case 2:
-		stripState[stripNum].ledModeColor[0] = random(0xFFFFFF);
-		stripState[stripNum].ledModeColor[1] = random(0xFFFFFF);
+		stripState[stripNum].ledModeColor[0] = rand()  & 0xFFFFFF;
+		stripState[stripNum].ledModeColor[1] = rand()  & 0xFFFFFF;
 		break;
 	case 10:
 		break;
@@ -392,8 +399,8 @@ void setDispModeColors(uint8_t stripNum, int mode) {
 	case 14:
 		break;
 	case 15:
-		stripState[stripNum].ledModeColor[0] = random(0xFFFFFF);
-		stripState[stripNum].ledModeColor[1] = random(0xFFFFFF);
+		stripState[stripNum].ledModeColor[0] = rand()  & 0xFFFFFF;
+		stripState[stripNum].ledModeColor[1] = rand()  & 0xFFFFFF;
 		break;
 	case 20:
 		rainbowStepIndex[stripNum] = 0;
@@ -444,22 +451,6 @@ int setLEDParams(string command) {
 bool startsWith(const char *pre, const char *str) {
 	size_t lenpre = strlen(pre), lenstr = strlen(str);
 	return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
-}
-
-std::vector<std::string> &split(const std::string &s, char delim,
-		std::vector<std::string> &elems) {
-	std::stringstream ss(s);
-	std::string item;
-	while (std::getline(ss, item, delim)) {
-		elems.push_back(item);
-	}
-	return elems;
-}
-
-std::vector<std::string> split(const std::string &s, char delim) {
-	std::vector<std::string> elems;
-	elems = split(s, delim, elems);
-	return elems;
 }
 
 int setRemoteControlStripIndex(string command) {
@@ -799,7 +790,7 @@ void randomCandy(uint8_t stripNum) {
 	if (multiColorNextColorTime[stripNum] - millis()
 			> stripState[stripNum].multiColorHoldTime) {
 		//get new RGB color
-		unsigned long new_color = random(0xFFFFFF);
+		unsigned long new_color = rand()  & 0xFFFFFF;
 		// move old color down chain
 		for (int x = (stripNumPixels[stripNum] - 1); x > 0; x--) {
 			ledColor[stripNum][x] = ledColor[stripNum][x - 1];
