@@ -44,8 +44,11 @@
 #include <string>
 #include <iostream>
 #include <vector>
+// COMMENT OUT SPARK INCLUDES FOR CLI BUILD
+// TODO move these includes to Eclpse project props?
 #include "wiring/inc/spark_wiring_cloud.h"
 #include "wiring/inc/spark_wiring.h"
+// END COMMENT OUT
 #include "application.h"
 
 using namespace std;
