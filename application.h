@@ -1,9 +1,5 @@
 #ifndef ledwax_h
 #define ledwax_h
-#include <sstream>
-#include <string>
-#include <iostream>
-#include <vector>
 using namespace std;
 
 #ifndef NULL
@@ -30,7 +26,7 @@ void readStripState(led_strip_disp_state*);
 void putStripState(led_strip_disp_state*);
 string buildStripStateJSON();
 void setDispModeColors(uint8_t, int);
-int setLEDParams(string);
+int setLEDParams(String);
 int setRemoteControlStripIndex(string);
 int setLEDStripColor(string);
 int setDispMode(string);
@@ -38,8 +34,6 @@ int setBright(string);
 int setLedFadeTimeInterval(string);
 int setMultiColorHoldTime(string);
 int setLedFadeMode(string);
-std::vector<std::string> &split(const std::string, char, std::vector<std::string>);
-std::vector<std::string> split(const std::string, char);
 void refreshLEDs(uint8_t);
 void turnOffLEDs(uint8_t);
 void white(uint8_t);
