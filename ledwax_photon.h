@@ -1,10 +1,13 @@
 #ifndef ledwax_h
 #define ledwax_h
-using namespace std;
 
 #ifndef NULL
 #define NULL   ((void *) 0)
 #endif
+
+#include <string>
+
+using namespace std;
 
 typedef struct {
   uint8_t dispMode;
@@ -16,9 +19,6 @@ typedef struct {
   unsigned long fadeTimeInterval;
   float ledStripBrightness;
 } led_strip_disp_state;
-#endif
-
-
 
 // METHOD DECLARATIONS
 void initStripState(uint8_t);
@@ -54,3 +54,4 @@ void colorWipe(uint8_t, uint8_t);
 void renderPixels(uint8_t);
 uint32_t rgbColor(uint8_t, uint8_t, uint8_t);
 uint32_t wheel(uint8_t);
+#endif
