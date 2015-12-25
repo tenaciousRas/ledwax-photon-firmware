@@ -1,63 +1,76 @@
+#include <string>
 #include "lib/spark-flashee-eeprom/flashee-eeprom.h"
 #include "lib/neopixel/neopixel.h"
 #include "ledwax_photon.h"
 #include "ledwax_photon_util.h"
 #include "ledwax_photon_constants.h"
 
+using namespace ledwax;
+
 LEDWaxPhoton::LEDWaxPhoton(uint8_t stripType[], uint8_t stripNumPixels[], uint8_t stripNumColorsPerPixel[],
-        uint8_t pwmStripPins[]) {
+        uint8_t pwmStripPins[][NUM_LEDS_PWM_RGB_STRIP]) {
     if (sizeof(stripType) != sizeof(stripNumPixels) || sizeof(stripType) != sizeof(stripNumColorsPerPixel)
             || sizeof(stripNumPixels) != sizeof(stripNumColorsPerPixel)) {
         // invalid params
         return;
     }
+    ledwaxUtil = ledwaxutil::LEDWaxPhotonUtil();
     this->numStrips = sizeof(stripType);
-    this->stripType(
-            stripType);
-    this->stripNumPixels(
-            stripType);
-    this->stripNumColorsPerPixel(
-            stripNumColorsPerPixel);
-    *this->stripState = (uint16_t *) malloc(
+    *this->stripType = *stripType;
+    *this->stripNumPixels = *stripNumPixels;
+    *this->stripNumColorsPerPixel = *stripNumColorsPerPixel;
+    *this->stripState = *(led_strip_disp_state *) malloc(
             sizeof(led_strip_disp_state) * numStrips);
     for (int i = 0; i < numStrips; i++) {
-        if (this->stripNumPixels > maxNumPixels) {
-            this->maxNumPixels = this->stripNumPixels;
+        if (*this->stripNumPixels > maxNumPixels) {
+            this->maxNumPixels = *this->stripNumPixels;
         }
     }
-    this->pwmStripPins = pwmStripPins;
-    *this->pwmStripPins = (uint16_t *) malloc(
-            sizeof(unsigned long) * numStrips * NUM_LEDS_PWM_RGB_STRIP);
-    *this->multiColorNextColorTime = (uint16_t *) malloc(
+    *this->pwmStripPins[0] = pwmStripPins[0][0];
+    *this->multiColorNextColorTime = *(unsigned long *) malloc(
             sizeof(unsigned long) * numStrips);
-    *this->ledColor = (uint16_t *) malloc(
+    **this->ledColor = *(unsigned long *) malloc(
             sizeof(unsigned long) * numStrips * this->maxNumPixels);
-    *this->addressableStrips = (uint16_t *) malloc(
+    **this->ledColor = *(unsigned long *) malloc(
+            sizeof(unsigned long) * numStrips * this->maxNumPixels);
+    **this->ledColorOld = *(unsigned long *) malloc(
+            sizeof(unsigned long) * numStrips * this->maxNumPixels);
+    **this->ledColorFadeTo = *(unsigned long *) malloc(
+            sizeof(unsigned long) * numStrips * this->maxNumPixels);
+    *this->ledFadeStepTime = *(uint16_t *) malloc(
+            sizeof(unsigned long) * numStrips);
+    *this->ledFadeStepIndex = *(uint16_t *) malloc(
+            sizeof(int) * numStrips);
+    ***this->ledFadeStep = *(double *) malloc(
+            sizeof(unsigned long) * numStrips * this->maxNumPixels * 3);
+    *this->rainbowStepIndex = *(uint16_t *) malloc(
+            sizeof(int) * numStrips);
+    *this->addressableStrips = (Adafruit_NeoPixel *) malloc(
             sizeof(Adafruit_NeoPixel*) * numStrips);
-    *this->addressableStrip = (uint16_t *) malloc(
-            sizeof(Adafruit_NeoPixel) * numStrips);
     for (int i = 0; i < numStrips; i++) {
         if (this->stripType[i] == STRIP_TYPE_WS2801 || this->stripType[i] == STRIP_TYPE_WS2811
                 || this->stripType[i] == STRIP_TYPE_WS2812) {
-            addressableStrip[i] = Adafruit_NeoPixel(
-                    this->stripNumPixels[i]);
-            addressableStrips[i] = &addressableStrip[i];
+            addressableStrips[i] = new Adafruit_NeoPixel(
+                    (uint8_t) *this->stripNumPixels, 5, WS2811);
         } else {
-            addressableStrip[i] = NULL;
             addressableStrips[i] = NULL;
         }
     }
 }
 
+LEDWaxPhoton::~LEDWaxPhoton() {
+}
+
 void LEDWaxPhoton::begin() {
 // init eeprom
-    flash = Devices::createDefaultStore();
+    flash = Flashee::Devices::createDefaultStore();
     remoteControlStripIndex = 0;
     for (int i = 0; i < numStrips; i++) {
         defaultStripState(
                 i);
         // read eeprom
-        readStripState (&stripState[i]);
+        readStripState(
+                &stripState[i]);
         // setup LEDs
         setDispModeColors(
                 i, stripState[i].dispMode);
@@ -132,22 +145,28 @@ void LEDWaxPhoton::renderAll() {
 
 void LEDWaxPhoton::defaultStripState(uint8_t stripNum) {
     stripState[stripNum].fading = false;
-    stripState[stripNum].dispMode = DEFAULT_DISP_MODE;
-    stripState[stripNum].ledFadeMode = DEFAULT_LED_FADE_MODE;
+    stripState[stripNum].dispMode = DEFAULT_DISP_MODE
+    ;
+    stripState[stripNum].ledFadeMode = DEFAULT_LED_FADE_MODE
+    ;
     stripState[stripNum].multiColorAltState = 0;
     stripState[stripNum].ledModeColor[0] = TWYELLOW;
     stripState[stripNum].ledModeColor[1] = TWBLUE;
     stripState[stripNum].ledModeColor[2] = OFF;
-    stripState[stripNum].multiColorHoldTime = DEFAULT_MULTI_COLOR_HOLD_TIME;
-    stripState[stripNum].fadeTimeInterval = LED_FADE_STEP_DELAY_MS;
-    stripState[stripNum].ledStripBrightness = DEFAULT_LED_STRIP_BRIGHTNESS;
+    stripState[stripNum].multiColorHoldTime = DEFAULT_MULTI_COLOR_HOLD_TIME
+    ;
+    stripState[stripNum].fadeTimeInterval = LED_FADE_STEP_DELAY_MS
+    ;
+    stripState[stripNum].ledStripBrightness = DEFAULT_LED_STRIP_BRIGHTNESS
+    ;
 }
 
 void LEDWaxPhoton::readStripState(led_strip_disp_state* ret) {
     unsigned int offset = eepromAddyStripState + sizeof(int); // store int at addy 0
     uint8_t bData;
     ret->fading = false;
-    ret->multiColorAltState = INITIAL_MULTI_COLOR_ALT_STATE;
+    ret->multiColorAltState = INITIAL_MULTI_COLOR_ALT_STATE
+    ;
     flash->read(
             bData, offset++);
     ret->dispMode = (uint8_t) bData;
@@ -209,9 +228,7 @@ void LEDWaxPhoton::putStripState(led_strip_disp_state* lsds) {
             // store long
             for (int j = 3; j >= 0; j--) {
                 flash->write(
-                        ((uint8_t)(
-                                (lsds->ledModeColor[i] >> (8 * j)) & 0xFF)),
-                        offset++);
+                        ((uint8_t) ((lsds->ledModeColor[i] >> (8 * j)) & 0xFF)), offset++);
             }
         } else {
             offset += 4;
@@ -221,9 +238,7 @@ void LEDWaxPhoton::putStripState(led_strip_disp_state* lsds) {
         // store long
         for (int j = 3; j >= 0; j--) {
             flash->write(
-                    ((uint8_t)(
-                            (lsds->multiColorHoldTime >> (8 * j)) & 0xFF)),
-                    offset++);
+                    ((uint8_t) ((lsds->multiColorHoldTime >> (8 * j)) & 0xFF)), offset++);
         }
     } else {
         offset += 4;
@@ -233,9 +248,7 @@ void LEDWaxPhoton::putStripState(led_strip_disp_state* lsds) {
         unsigned int lsb = lsds->ledStripBrightness * 1024;
         for (int j = 1; j >= 0; j--) {
             flash->write(
-                    ((uint8_t)(
-                            (lsb >> (8 * j)) & 0xFF)),
-                    offset++);
+                    ((uint8_t) ((lsb >> (8 * j)) & 0xFF)), offset++);
         }
     } else {
         offset += 2;
@@ -249,7 +262,7 @@ void LEDWaxPhoton::putStripState(led_strip_disp_state* lsds) {
 #endif
 }
 
-string buildStripStateJSON() {
+string LEDWaxPhoton::buildStripStateJSON() {
     string ret = "";
     char convBuf[5] = { 0 };
     ret += "{ ledStripDisplayState:[";
@@ -279,10 +292,10 @@ string buildStripStateJSON() {
         itoa(stripState[i].multiColorAltState, convBuf, 2);
         ret += "multiColorAltState:'" + (string) convBuf + "'";
         ret += ",";
-        ltoa(stripState[i].multiColorHoldTime, convBuf, 4);
+        //ltoa(stripState[i].multiColorHoldTime, convBuf, 4);
         ret += "multiColorHoldTime:'" + (string) convBuf + "'";
         ret += ",";
-        ltoa(stripState[i].fadeTimeInterval, convBuf, 4);
+        //ltoa(stripState[i].fadeTimeInterval, convBuf, 4);
         ret += "fadeTimeInterval:'" + (string) convBuf;
         ret += "'";
         ret += "}";
@@ -357,8 +370,7 @@ int LEDWaxPhoton::setRemoteControlStripIndex(string command) {
 }
 
 int LEDWaxPhoton::setLEDStripColor(string command) {
-    char data[40];
-// expect to always have two Ints from Android app
+    // expect to always have two Ints from Android app
     uint8_t b1[2];
     uint8_t b2[38];
     b1[0] = command[0];
@@ -376,7 +388,8 @@ int LEDWaxPhoton::setLEDStripColor(string command) {
             (char *) b2);
     color = (color << 8) >> 8;
     stripState[remoteControlStripIndex].ledModeColor[colorIndex] = color;
-    putStripState (&stripState[remoteControlStripIndex]);
+    putStripState(
+            &stripState[remoteControlStripIndex]);
 #ifdef DEBUG_MODE
 //Serial.print(F("colorIndex = "));
 //Serial.print(colorIndex);
@@ -397,9 +410,11 @@ int LEDWaxPhoton::setDispMode(string command) {
     stripState[remoteControlStripIndex].dispMode = bData;
     setDispModeColors(
             remoteControlStripIndex, stripState[remoteControlStripIndex].dispMode);
-    stripState[remoteControlStripIndex].multiColorAltState = INITIAL_MULTI_COLOR_ALT_STATE;
+    stripState[remoteControlStripIndex].multiColorAltState = INITIAL_MULTI_COLOR_ALT_STATE
+    ;
     stripState[remoteControlStripIndex].fading = false;
-    putStripState (&stripState[remoteControlStripIndex]);
+    putStripState(
+            &stripState[remoteControlStripIndex]);
 #ifdef DEBUG_MODE
 //Serial.print(F("dispMode = "));
 //Serial.print((int) bData);
@@ -418,7 +433,8 @@ int LEDWaxPhoton::setBright(string command) {
         bData = 255;
     }
     stripState[remoteControlStripIndex].ledStripBrightness = (float) bData / (float) 255.0;
-    putStripState (&stripState[remoteControlStripIndex]);
+    putStripState(
+            &stripState[remoteControlStripIndex]);
 #ifdef DEBUG_MODE
 //Serial.print(F("ledStripBrightness = "));
 //Serial.print(bData);
@@ -434,7 +450,8 @@ int LEDWaxPhoton::setLedFadeTimeInterval(string command) {
     bData = atol(
             command.c_str());
     stripState[remoteControlStripIndex].fadeTimeInterval = bData;
-    putStripState (&stripState[remoteControlStripIndex]);
+    putStripState(
+            &stripState[remoteControlStripIndex]);
     return 0;
 }
 
@@ -443,7 +460,8 @@ int LEDWaxPhoton::setMultiColorHoldTime(string command) {
     bData = atol(
             command.c_str());
     stripState[remoteControlStripIndex].multiColorHoldTime = bData;
-    putStripState (&stripState[remoteControlStripIndex]);
+    putStripState(
+            &stripState[remoteControlStripIndex]);
     return 0;
 }
 
@@ -459,7 +477,8 @@ int LEDWaxPhoton::setLedFadeMode(string command) {
         bData = 0;
     }
     stripState[remoteControlStripIndex].ledFadeMode = bData;
-    putStripState (&stripState[remoteControlStripIndex]);
+    putStripState(
+            &stripState[remoteControlStripIndex]);
 #ifdef DEBUG_MODE
 //Serial.print(F("ledFadeMode = "));
 //Serial.print(stripState[remoteControlStripIndex].ledFadeMode);
@@ -551,7 +570,8 @@ void LEDWaxPhoton::alternatingThreeColors(uint8_t stripNum) {
 
 void LEDWaxPhoton::startFade(uint8_t stripNum) {
     stripState[stripNum].fading = true;
-    unsigned int ledFadeSteps = LED_FADE_STEPS;
+    unsigned int ledFadeSteps = LED_FADE_STEPS
+    ;
     long colorDist;
     uint32_t rLedColor, rLedColorOld;
     multiColorNextColorTime[stripNum] += (stripState[stripNum].fadeTimeInterval * ledFadeSteps);
@@ -607,8 +627,9 @@ void LEDWaxPhoton::doFade(uint8_t stripNum) {
     if (!stripState[stripNum].fading) {
         return;
     }
-    uint16_t ledFadeSteps = LED_FADE_STEPS;
-    uint32_t rLedColor, rLedColorOld, rLedColorFadeTo;
+    uint16_t ledFadeSteps = LED_FADE_STEPS
+    ;
+    uint32_t rLedColorFadeTo;
     switch (stripState[stripNum].ledFadeMode) {
         case 0:
             int x, y;
@@ -690,7 +711,7 @@ void LEDWaxPhoton::rainbow(uint8_t stripNum, uint16_t wait) {
             rainbowStepIndex[stripNum] = 0;
         }
         for (i = 0; i < stripNumPixels[stripNum]; i++) {
-            ledColor[stripNum][i] = wheel(
+            ledColor[stripNum][i] = ledwaxUtil.wheel(
                     (i + rainbowStepIndex[stripNum]) % 255);
         }
         rainbowStepIndex[stripNum]++;
@@ -711,7 +732,7 @@ void LEDWaxPhoton::rainbowCycle(uint8_t stripNum, uint16_t wait) {
             // (thats the i / strip.numPixels() part)
             // Then add in j which makes the colors go around per pixel
             // the % 96 is to make the wheel cycle around
-            ledColor[stripNum][i] = wheel(
+            ledColor[stripNum][i] = ledwaxUtil.wheel(
                     ((i * 256 / stripNumPixels[stripNum]) + rainbowStepIndex[stripNum]) % 256);
         }
         rainbowStepIndex[stripNum]++;

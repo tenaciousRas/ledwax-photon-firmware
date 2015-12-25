@@ -37,12 +37,6 @@
  Red = SDI
  :::
  */
-#include "lib/spark-flashee-eeprom/flashee-eeprom.h"
-#include "lib/neopixel/neopixel.h"
-#include <sstream>
-#include <string>
-#include "wiring/inc/spark_wiring_cloud.h"
-#include "wiring/inc/spark_wiring.h"
 #include "ledwax_photon.h"
 
 #define _DEBUG_MODE 1
@@ -51,29 +45,40 @@
 // set number of LED strips
 #define NUM_STRIPS 2
 
-LEDWaxPhoton LedWax;
+using namespace ledwax;
+
+uint8_t STRIP_TYPES[2] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2812 };
+uint8_t NUM_LEDS[2] = { 1,
+NUM_LEDS_SPARKFUN_WS2801_1METER };
+uint8_t NUM_COLORS_PER_PIXEL[2] = { NUM_LEDS_PWM_RGB_STRIP, 3 };
+uint8_t PWM_STRIP_PINS[2][3] = { { 0, 1, 2 }, { } };
+
+LEDWaxPhoton LedWax = LEDWaxPhoton(
+        STRIP_TYPES, NUM_LEDS, NUM_COLORS_PER_PIXEL, PWM_STRIP_PINS);
+
+int setLEDParams(String);
 
 void setup() {
 #ifdef _DEBUG_MODE
 #endif
-	LedWax = LEDWaxPhoton( { STRIP_TYPE_PWM, STRIP_TYPE_WS2812 }, { 1,
-	NUM_LEDS_SPARKFUN_WS2801_1METER }, { NUM_LEDS_PWM_RGB_STRIP, 3 }, { { 0, 1,
-			2 }, { } });
-	LedWax.begin();
-	// set particle functions
-	Particle.function("setLEDParams", &setLEDParams);
-	// set vars
-	Particle.variable("numStrips", &LedWax.numStrips, INT);
-	Particle.variable("stripStateJSON", &LedWax.stripStateJSON, STRING);
+    LedWax.begin();
+    // set particle functions
+    Particle.function(
+            "setLEDParams", &setLEDParams);
+    // set vars
+    Particle.variable(
+            "numStrips", &LedWax.numStrips, INT);
+    Particle.variable(
+            "stripStateJSON", &LedWax.stripStateJSON, STRING);
 #ifdef _DEBUG_MODE
 #endif
 }
 
 void loop() {
-	LedWax.renderAll();
+//    LedWax.renderAll();
 }
 
-int setLEDParams(string command) {
+int setLEDParams(String command) {
     bool validCommand = false;
     string cmd = string(
             command);
@@ -97,21 +102,29 @@ int setLEDParams(string command) {
                 NULL, ",");
     }
     if (parsedCmds[0] == "qry") {
-        stripStateJSON = buildStripStateJSON().c_str();
+        // FIXME move to ledwax
+        LedWax.stripStateJSON = LedWax.buildStripStateJSON().c_str();
+        // DONE FIXME
         Particle.publish(
-                "ledStripDisplayState", stripStateJSON);
+                "ledStripDisplayState", LedWax.stripStateJSON);
     } else if (parsedCmds[0] == "idx") {
-        setRemoteControlStripIndex(parsedCmds[1]);
+        LedWax.setRemoteControlStripIndex(
+                parsedCmds[1]);
     } else if (parsedCmds[0] == "col") {
-        setRemoteControlStripIndex(parsedCmds[1] + "," + parsedCmds[1]);
+        LedWax.setLEDStripColor(
+                parsedCmds[1] + "," + parsedCmds[1]);
     } else if (parsedCmds[0] == "brt") {
-        setRemoteControlStripIndex(parsedCmds[1]);
+        LedWax.setBright(
+                parsedCmds[1]);
     } else if (parsedCmds[0] == "mod") {
-        setRemoteControlStripIndex(parsedCmds[1]);
+        LedWax.setDispMode(
+                parsedCmds[1]);
     } else if (parsedCmds[0] == "mht") {
-        setRemoteControlStripIndex(parsedCmds[1]);
+        LedWax.setRemoteControlStripIndex(
+                parsedCmds[1]);
     } else if (parsedCmds[0] == "lfm") {
-        setRemoteControlStripIndex(parsedCmds[1]);
+        LedWax.setRemoteControlStripIndex(
+                parsedCmds[1]);
     } else {
         // invalid command
         validCommand = false;
