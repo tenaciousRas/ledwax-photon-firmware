@@ -56,6 +56,7 @@ Eclipse is the primary IDE (supported):
 -- Choose Build Variables
 -- Choose PARTICLE_FW_PATH - click the Edit button (on right)
 -- Enter path to your spark-firmware directory, no trailing slash.
+-- Projct -> C/C++ Index -> Rebuild
 -- clean/build from Eclipse
 
 ### Development in Atom IDE

@@ -47,16 +47,9 @@
 
 #define _DEBUG_MODE 1
 
-using namespace std;
-using namespace Flashee;
-
 // LED Strip setup
 // set number of LED strips
 #define NUM_STRIPS 2
-// Set number of pixels in an addressable strip. 25 = 25 pixels in a row.
-// Does not apply to single-color and non-addressable RGB strips.
-
-// Set number color of PWM STRIPs
 
 LEDWaxPhoton LedWax;
 
@@ -81,31 +74,51 @@ void loop() {
 }
 
 int setLEDParams(string command) {
-	bool validCommand = false;
-	uint16_t cmdLen = command.length();
-	uint8_t howManyParams = 0;
-	int cmdDelimPos = 0;
-	for (int i = 0; i < cmdLen; i++) {
-		cmdDelimPos = command.find(";", cmdDelimPos);
-		if (cmdDelimPos != std::string::npos) {
-			howManyParams++;
-		}
-	}
-	string parsedCmds[howManyParams];
-	char* cmdPart = strtok(strdup(command.c_str()), ",");
-	parsedCmds[0] = string(cmdPart);
-	for (int i = 1; i < howManyParams; i++) {
-		cmdPart = strtok(NULL, ",");
-	}
-	if (parsedCmds[0] == "qry") {
-	} else if (parsedCmds[0] == "idx") {
-	} else if (parsedCmds[0] == "col") {
-	} else if (parsedCmds[0] == "brt") {
-	} else if (parsedCmds[0] == "mod") {
-	} else if (parsedCmds[0] == "mht") {
-	} else if (parsedCmds[0] == "lfm") {
-	} else {
-		// invalid command
-	}
+    bool validCommand = false;
+    string cmd = string(
+            command);
+    uint16_t cmdLen = cmd.length();
+    uint8_t howManyParams = 0;
+    uint16_t cmdDelimPos = 0;
+    for (int i = 0; i < cmdLen; i++) {
+        cmdDelimPos = cmd.find(
+                ";", cmdDelimPos);
+        if (cmdDelimPos != std::string::npos) {
+            howManyParams++;
+        }
+    }
+    string parsedCmds[howManyParams];
+    char* cmdPart = strtok(
+            strdup(cmd.c_str()), ",");
+    parsedCmds[0] = string(
+            cmdPart);
+    for (int i = 1; i < howManyParams; i++) {
+        cmdPart = strtok(
+                NULL, ",");
+    }
+    if (parsedCmds[0] == "qry") {
+        stripStateJSON = buildStripStateJSON().c_str();
+        Particle.publish(
+                "ledStripDisplayState", stripStateJSON);
+    } else if (parsedCmds[0] == "idx") {
+        setRemoteControlStripIndex(parsedCmds[1]);
+    } else if (parsedCmds[0] == "col") {
+        setRemoteControlStripIndex(parsedCmds[1] + "," + parsedCmds[1]);
+    } else if (parsedCmds[0] == "brt") {
+        setRemoteControlStripIndex(parsedCmds[1]);
+    } else if (parsedCmds[0] == "mod") {
+        setRemoteControlStripIndex(parsedCmds[1]);
+    } else if (parsedCmds[0] == "mht") {
+        setRemoteControlStripIndex(parsedCmds[1]);
+    } else if (parsedCmds[0] == "lfm") {
+        setRemoteControlStripIndex(parsedCmds[1]);
+    } else {
+        // invalid command
+        validCommand = false;
+    }
+    if (!validCommand) {
+        return 1;
+    }
+    return 0;
 }
 
