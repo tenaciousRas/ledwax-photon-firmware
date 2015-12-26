@@ -120,10 +120,10 @@ int setLEDParams(String command) {
         LedWax.setDispMode(
                 parsedCmds[1]);
     } else if (parsedCmds[0] == "mht") {
-        LedWax.setRemoteControlStripIndex(
+        LedWax.setMultiColorHoldTime(
                 parsedCmds[1]);
     } else if (parsedCmds[0] == "lfm") {
-        LedWax.setRemoteControlStripIndex(
+        LedWax.setLedFadeMode(
                 parsedCmds[1]);
     } else {
         // invalid command
