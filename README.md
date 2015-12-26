@@ -38,10 +38,12 @@ Edit the code in application.cpp.  For example, where we have two strips, one PW
 Set LED colors, modes, brightness, and animation using the Particle Cloud.
 
 # IoT API
+##Variables
 The folowing particle cloud variables are exposed:
 * numStrips : number of LED strips configured in firmware
 * stripStateJSON : current state of all led strips
 
+##Functions
 LEDWAX Photon exposes the following particle cloud functions:
 * setLEDParams(String command) : send command to LED strip
 
@@ -85,7 +87,7 @@ There is no space between the command-name and value(s).  All commands require a
 
 >	lfi : [TODO]
 
-### Example Commands
+#### Example Commands
 * qry
 * idx0
 * mod1
@@ -96,7 +98,7 @@ There is no space between the command-name and value(s).  All commands require a
 * mht5000
 
 # Hardware
-Setting up a circuit with some LEDs isn't too difficult.  If you've never setup a LED circuit from scratch then checkout the fun products at Adafruit and Sparkfun that can help.  If time permits an example circuit diagram and sketch configuration will be provided.
+Setting up a circuit with some LEDs isn't too difficult.  If you've never setup a LED circuit from scratch then checkout the fun products at Adafruit and Sparkfun for help.  If time permits an example circuit diagram and sketch configuration will be provided.
 
 The latest version of this firmware is intended for a PWM driver IC to extend the PWM output capabilities of the Photon.  The PWM driver should connect to the I2C interface of the photon.
 
@@ -104,7 +106,7 @@ This project is intended for serious amateur usage.  The user of this software a
 
 I've designed a custom PCB which is undergoing testing so this can be assembled more easily.  The PCB makes it easier to setup different types of LED strips with a Photon.
 ***
-## Develop & Contribute
+# Develop & Contribute
 LEDWax-Photon is a C/C++ project targeted at ARM GNU EABI cross-tools compiling, specifically for the Photon/STM platform.  The code started out as standard C compiled agaist g++, but it's been refactored for c++.
 
 There are multiple branches.  As of the version 0.1, no branch is considered stable so none are merged to master yet.
