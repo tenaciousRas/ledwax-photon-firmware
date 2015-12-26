@@ -75,7 +75,7 @@ void setup() {
 }
 
 void loop() {
-//    LedWax.renderAll();
+    LedWax.renderAll();
 }
 
 int setLEDParams(String command) {
