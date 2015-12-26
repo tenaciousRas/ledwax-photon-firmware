@@ -26,7 +26,7 @@ NOTE: We lost WS2801 support along the way and hope to restore it.  WS2811/12 su
 
 ### Software Configuration
 Edit the code in application.cpp.  For example, where we have two strips, one PWM and another WS2812-type (2 strips):
-    #defin NUM_STRIPS 2
+    #define NUM_STRIPS 2
 	uint8_t STRIP_TYPES[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2812 };
 	uint8_t NUM_LEDS[NUM_STRIPS] = { 1, 60 };
 	uint8_t NUM_COLORS_PER_PIXEL[NUM_STRIPS] = { NUM_LEDS_PWM_RGB_STRIP, 3 };
@@ -36,43 +36,66 @@ Edit the code in application.cpp.  For example, where we have two strips, one PW
 Set LED colors, modes, brightness, and animation using the Particle Cloud.
 
 # IoT API
+##Variables
 The folowing particle cloud variables are exposed:
 	numStrips : number of LED strips configured in firmware
 	stripStateJSON : current state of all led strips
 
+##Functions
 LEDWAX Photon exposes the following particle cloud functions:
 	setLEDParams(String command) : send command to LED strip
 
 The format for "command" is:
-[command-name][value][,value]*
+> [command-name][value]?[,value]*
 
-All commands require a value - except "qry".  There is no space between the command-name and value(s).  Some commands accept more than one value, such as "col" (color).  Multiple values are comma-separated.
+There is no space between the command-name and value(s).  All commands require a value - except "qry".  Some commands accept more than one value, such as "col" (color).  Multiple values are comma-separated.  Commands are terminated with C++ string termination (\0).
 
-The "command" parameter can be one of these:
-	qry : refresh stripStateJSON variable
-	idx : set LED command index -- all following commands will be executed against this LED strip.  Min value is 0, max value is NUM_STRIPS - 1.  Default is 0.
-	col : set LED pixel color.  Format [pixel-index],[decimal-value-0-to-255]
-	brt : set strip brightness.  Brightness stored sepearately from color in firmware.
-	mod : set strip display mode.  possible values are:
-		0: solid color (default)
-		1: fade terawatt industries colors
-		2: fade random colors
-		10: fade two colors
-		11: fade three colors
-		12: two alternating colors
-		13: terawatt alternating colors
-		14: three alternating colors
-		15: two random alternating colors
-		20: rainbow
-		21: rainbow cycle
-		22: random candy
-		30: cylon
-	mht : Set multi-color-hold-time.  The multi-color-hold-time determines how long each color is displayed before the transition to the next color.
-	lfm : Set LED-fade-mode.  The LED-fade-mode is the style of transition for certain display modes.  A value of 0 will disable the fade color transition, so colors will switch immediately.  A value of 1 enables the fade transition.  This only applies to display modes 0 - 10.
-	lfi : [TODO]
+"command-name" can be one of the following:
+>	qry : refresh stripStateJSON variable
+
+>	idx : set LED command index -- all following commands will be executed against this LED strip.  Min value is 0, max value is NUM_STRIPS - 1.  Default is 0.
+
+>	col : set LED pixel color.  Format:
+
+>		[pixel-index],[decimal-value-0-to-255]
+>	where pixel-index is 0 (red), 1 (green), 2 (blue)
+
+>	brt : set strip brightness.  Brightness is stored sepearately from color in firmware.
+
+>	mod : set strip display mode.  Valid values are:
+
+>		0. solid color (default)
+>		1. fade terawatt industries colors
+>		2. fade random colors
+>		10. fade two colors
+>		11. fade three colors
+>		12. two alternating colors
+>		13. terawatt alternating colors
+>		14. three alternating colors
+>		15. two random alternating colors
+>		20. rainbow
+>		21.rainbow cycle
+>		22.random candy
+>		30.cylon
+
+>	mht : Set multi-color-hold-time.  The multi-color-hold-time determines how long each color is displayed before the transition to the next color.  Valid values are [0-65535] (16-bit integer).
+
+>	lfm : Set LED-fade-mode.  The LED-fade-mode is the style of transition for certain display modes.  A value of 0 disables the fade color transition, so colors switch immediately.  A value of 1 enables the fade transition.  This only applies to display modes 0 - 10.
+
+>	lfi : [TODO]
+
+#### Example Commands
+* qry
+* idx0
+* mod1
+* col0,255
+* col1,127
+* col2,64
+* mod22
+* mht5000
 
 # Hardware
-Setting up a circuit with some LEDs isn't too difficuly.  If you've never setup a LED circuit from scratch then checkout the fun products at Adafruit and Sparkfun that can help.  If time permits an example circuit diagram and sketch configuration will be provided.
+Setting up a circuit with some LEDs isn't too difficult.  If you've never setup a LED circuit from scratch then checkout the fun products at Adafruit and Sparkfun for help.  If time permits an example circuit diagram and sketch configuration will be provided.
 
 The latest version of this firmware is intended for a PWM driver IC to extend the PWM output capabilities of the Photon.  The PWM driver should connect to the I2C interface of the photon.
 
@@ -80,7 +103,7 @@ This project is intended for serious amateur usage.  The user of this software a
 
 I've designed a custom PCB which is undergoing testing so this can be assembled more easily.  The PCB makes it easier to setup different types of LED strips with a Photon.
 ***
-## Develop & Contribute
+# Develop & Contribute
 LEDWax-Photon is a C/C++ project targeted at ARM GNU EABI cross-tools compiling, specifically for the Photon/STM platform.  The code started out as standard C compiled agaist g++, but it's been refactored for c++.
 
 There are multiple branches.  As of the version 0.1, no branch is considered stable so none are merged to master yet.
