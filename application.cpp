@@ -69,7 +69,7 @@ SYSTEM_MODE(
 #define NUM_LEDS_PWM_WHITE_STRIP  1  // single color PWM
 #define NUM_LEDS_PWM_RGB_STRIP  3  // RGB PWM
 
-uint8_t stripType[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2801 };
+uint8_t stripType[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2812 };
 uint8_t stripNumPixels[NUM_STRIPS] = { 1, NUM_LEDS_SPARKFUN_WS2801_1METER }; // 1 for PWM strip
 uint8_t stripNumColorsPerPixel[NUM_STRIPS] = { NUM_LEDS_PWM_RGB_STRIP, 3 };
 // Initialize strip variables.  Interesting C implementation.  Define two arrays, one for
@@ -155,6 +155,7 @@ void setup() {
 #endif
     // init eeprom
     flash = Devices::createDefaultStore();
+    pwmDriver = Adafruit_PWMServoDriver(0x40);
     // set callback functions
     Particle.function(
             "setLEDParams", setLEDParams);
@@ -179,6 +180,7 @@ void setup() {
     }
     addressableStrips[1]->begin();
     addressableStrips[1]->show();
+    pwmDriver.begin();
 }
 
 void loop() {
