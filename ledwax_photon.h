@@ -2,6 +2,7 @@
 #define LEDWAX_H
 #include "lib/spark-flashee-eeprom/flashee-eeprom.h"
 #include "lib/neopixel/neopixel.h"
+#include "lib/Adafruit_PWMServoDriver/Adafruit_PWMServoDriver.h"
 #include "ledwax_photon_util.h"
 #include "ledwax_photon_constants.h"
 
@@ -76,6 +77,8 @@ namespace ledwax {
         uint32_t rgbColor(uint8_t, uint8_t, uint8_t), wheel(uint8_t);
 
     private:
+        ledwaxutil::LEDWaxPhotonUtil ledwaxUtil;
+
         uint8_t stripType[], stripNumPixels[], // 1 for PWM strip
                 stripNumColorsPerPixel[];
         // Initialize strip variables.  Interesting C implementation.  Define two arrays, one for
@@ -110,7 +113,8 @@ namespace ledwax {
         Flashee::FlashDevice* flash;
         int eepromAddyStripState = 4;  // eeprom addy to store strip state
 
-        ledwaxutil::LEDWaxPhotonUtil ledwaxUtil;
+        bool hasPWMStrip = false;
+        Adafruit_PWMServoDriver pwmDriver;
     };
 }
 #endif

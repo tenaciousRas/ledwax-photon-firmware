@@ -22,6 +22,14 @@ bool LEDWaxPhotonUtil::startsWith(const char *pre, const char *str) {
             pre, str, lenpre) == 0;
 }
 
+bool LEDWaxPhotonUtil::isAddressableStrip(uint8_t stripType) {
+    if (stripType == STRIP_TYPE_WS2801 || stripType == STRIP_TYPE_WS2811 || stripType == STRIP_TYPE_WS2812) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 /**
  * Create a 24 bit color value from R,G,B
  */

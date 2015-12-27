@@ -14,7 +14,9 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t stripType[], uint8_t stripNumPixels[], uint8_
         // invalid params
         return;
     }
-    ledwaxUtil = ledwaxutil::LEDWaxPhotonUtil();
+    this->ledwaxUtil = ledwaxutil::LEDWaxPhotonUtil();
+    // init eeprom
+    flash = Flashee::Devices::createDefaultStore();
     this->numStrips = sizeof(stripType);
     *this->stripType = *stripType;
     *this->stripNumPixels = *stripNumPixels;
@@ -29,8 +31,6 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t stripType[], uint8_t stripNumPixels[], uint8_
     *this->pwmStripPins[0] = pwmStripPins[0][0];
     *this->multiColorNextColorTime = *(unsigned long *) malloc(
             sizeof(unsigned long) * numStrips);
-    **this->ledColor = *(unsigned long *) malloc(
-            sizeof(unsigned long) * numStrips * this->maxNumPixels);
     **this->ledColor = *(unsigned long *) malloc(
             sizeof(unsigned long) * numStrips * this->maxNumPixels);
     **this->ledColorOld = *(unsigned long *) malloc(
@@ -48,23 +48,37 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t stripType[], uint8_t stripNumPixels[], uint8_
     *this->addressableStrips = (Adafruit_NeoPixel *) malloc(
             sizeof(Adafruit_NeoPixel*) * numStrips);
     for (int i = 0; i < numStrips; i++) {
-        if (this->stripType[i] == STRIP_TYPE_WS2801 || this->stripType[i] == STRIP_TYPE_WS2811
-                || this->stripType[i] == STRIP_TYPE_WS2812) {
+        if (ledwaxUtil.isAddressableStrip(
+                this->stripType[i])) {
             addressableStrips[i] = new Adafruit_NeoPixel(
                     (uint8_t) *this->stripNumPixels, 5, WS2811);
         } else {
+            hasPWMStrip = true;
             addressableStrips[i] = NULL;
         }
+    }
+    if (hasPWMStrip) {
+        pwmDriver = Adafruit_PWMServoDriver(
+                0x0);
     }
 }
 
 LEDWaxPhoton::~LEDWaxPhoton() {
+    free(this->stripState);
+    free(this->multiColorNextColorTime);
+    free(this->ledColor);
+    free(this->ledColorOld);
+    free(this->ledColorFadeTo);
+    free(this->ledFadeStepTime);
+    free(this->ledFadeStepIndex);
+    free(this->ledFadeStep);
+    free(this->rainbowStepIndex);
+    free(this->addressableStrips);
 }
 
 void LEDWaxPhoton::begin() {
-// init eeprom
-    flash = Flashee::Devices::createDefaultStore();
     remoteControlStripIndex = 0;
+    bool hasPWMStrip = true;   // only setup I2C if PWM strip def'd
     for (int i = 0; i < numStrips; i++) {
         defaultStripState(
                 i);
@@ -74,9 +88,18 @@ void LEDWaxPhoton::begin() {
         // setup LEDs
         setDispModeColors(
                 i, stripState[i].dispMode);
+        if (ledwaxUtil.isAddressableStrip(
+                this->stripType[i])) {
+            hasPWMStrip = false;
+            addressableStrips[i]->begin();
+            addressableStrips[i]->show();
+        }
     }
-    addressableStrips[1]->begin();
-    addressableStrips[1]->show();
+    if (hasPWMStrip) {
+        pwmDriver.begin();
+        pwmDriver.setPWMFreq(
+                400.0);
+    }
 }
 
 void LEDWaxPhoton::renderAll() {
@@ -253,7 +276,7 @@ void LEDWaxPhoton::putStripState(led_strip_disp_state* lsds) {
     } else {
         offset += 2;
     }
-// update strip state watchvar
+    // update strip state watchvar
     stripStateJSON = buildStripStateJSON().c_str();
     Particle.publish(
             "ledStripDisplayState", stripStateJSON);
@@ -765,8 +788,8 @@ void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
             for (int i = 0; i < stripNumPixels[stripNum]; i++) {
                 for (int j = 0; j < stripNumColorsPerPixel[stripNum]; j++) {
                     ledColorFadeToChannels[j] = ((float) ((ledColor[stripNum][i] >> (8 * j)) & 0xFF) * brightness);
-                    analogWrite(
-                            pwmStripPins[stripNum][j], ledColorFadeToChannels[j]);
+                    pwmDriver.setPin(
+                            pwmStripPins[stripNum][j], ledColorFadeToChannels[j], false);
                 }
             }
             break;

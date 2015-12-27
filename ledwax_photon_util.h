@@ -10,7 +10,8 @@ namespace ledwaxutil {
         LEDWaxPhotonUtil();
         ~LEDWaxPhotonUtil();
 
-        bool static startsWith(const char*, const char*);
+        bool startsWith(const char*, const char*),
+                isAddressableStrip(uint8_t stripNum);
         uint32_t rgbColor(uint8_t, uint8_t, uint8_t);
         uint32_t wheel(uint8_t);
 
