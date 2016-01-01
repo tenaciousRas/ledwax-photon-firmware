@@ -1,11 +1,12 @@
 #ifndef LEDWAX_H
 #define LEDWAX_H
 #include "lib/spark-flashee-eeprom/flashee-eeprom.h"
-#include "lib/neopixel/neopixel.h"
+#include "lib/fastled/firmware/FastLED.h"
 #include "lib/Adafruit_PWMServoDriver/Adafruit_PWMServoDriver.h"
 #include "ledwax_photon_util.h"
 #include "ledwax_photon_constants.h"
 
+FASTLED_USING_NAMESPACE
 using namespace std;
 
 #define _LWAX_PHOTON_VERSION 5  // it's probably more like v.100
@@ -41,24 +42,25 @@ namespace ledwax {
 
     public:
 
-        LEDWaxPhoton(uint8_t[], uint8_t[], uint8_t[], uint8_t[][NUM_LEDS_PWM_RGB_STRIP]);
+        LEDWaxPhoton(uint8_t[], uint8_t[], uint8_t[], uint8_t[][NUM_PIXELS_PER_LED_PWM_RGB_STRIP]);
         ~LEDWaxPhoton();
 
         typedef struct {
             uint8_t dispMode;
             bool fading;
             uint8_t ledFadeMode; // color fade mode, 0 for entire strip, 1 for swipe pixels
-            int multiColorAltState;  // state of alternating colors
-            unsigned long ledModeColor[3];
-            unsigned long multiColorHoldTime;
-            unsigned long fadeTimeInterval;
+            int16_t multiColorAltState;  // state of alternating colors
+            uint32_t ledModeColor[3];
+            uint32_t multiColorHoldTime;
+            uint32_t fadeTimeInterval;
             float ledStripBrightness;
         } led_strip_disp_state;
 
-        led_strip_disp_state stripState[];
-        int numStrips = 0;
-        int maxNumPixels = 0;
-        String stripStateJSON;
+        led_strip_disp_state *stripState;
+        int16_t numStrips = 0;
+        int16_t maxNumPixels = 0;
+        int16_t totalNumAddressablePixels = 0;
+        char stripStateJSON[620];
         uint8_t remoteControlStripIndex = 0;
 
         // METHOD DECLARATIONS
@@ -71,7 +73,10 @@ namespace ledwax {
                 colorWipe(uint8_t, uint8_t), renderPixels(uint8_t);
         string
         buildStripStateJSON();
-        int setLEDParams(string), setRemoteControlStripIndex(string), setLEDStripColor(string), setDispMode(string),
+        char*
+        getStripStateJSON();
+        int16_t getNumStrips();
+        int16_t setLEDParams(string), setRemoteControlStripIndex(string), setLEDStripColor(string), setDispMode(string),
                 setBright(string), setLedFadeTimeInterval(string), setMultiColorHoldTime(string), setLedFadeMode(
                         string);
         uint32_t rgbColor(uint8_t, uint8_t, uint8_t), wheel(uint8_t);
@@ -79,39 +84,38 @@ namespace ledwax {
     private:
         ledwaxutil::LEDWaxPhotonUtil ledwaxUtil;
 
-        uint8_t stripType[], stripNumPixels[], // 1 for PWM strip
-                stripNumColorsPerPixel[];
+        uint8_t *stripType, *stripNumPixels, // 1 for PWM strip
+                *stripNumColorsPerPixel;
+        CRGB **addressableStrips;
+        // Adafruit_NeoPixel* addressableStrips[];
         // Initialize strip variables.  Interesting C implementation.  Define two arrays, one for
         // addressable strips, one for PWM.  Effectively define position of strips by populating specific members
         // of each array.
         // FIXME improve implementation
-        Adafruit_NeoPixel* addressableStrips[];
-//	Adafruit_NeoPixel* addressableStrips[NUM_STRIPS] = { NULL,
-//			&addressableStrip1 };
-        uint8_t pwmStripPins[][NUM_LEDS_PWM_RGB_STRIP];
+        uint8_t **pwmStripPins;
 
-        unsigned long multiColorNextColorTime[];
-        unsigned long ledColor[][0];
+        uint32_t *multiColorNextColorTime;
+        uint32_t **ledColor;
 //	{ {
 //	RED,
 //	OFF }, { TWYELLOW, TWBLUE }
 // };
         //  {RED, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF},
         //  {TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE}
-        uint32_t ledColorOld[][0];
+        uint32_t **ledColorOld;
 //	{ { RED,
 //	OFF }, { TWYELLOW, TWBLUE } };  // color before fade
-        uint32_t ledColorFadeTo[][0];
+        uint32_t **ledColorFadeTo;
 //	{ {
 //	RED,
 //	OFF }, { TWYELLOW, TWBLUE } };    // fade-to color
-        unsigned long ledFadeStepTime[];  // time to next fade step
-        int ledFadeStepIndex[]; // color distance divided by LED_FADE_STEPS
-        double ledFadeStep[][0][3]; // 3 for each RGB component
-        uint8_t rainbowStepIndex[];
+        uint32_t *ledFadeStepTime;  // time to next fade step
+        int16_t *ledFadeStepIndex; // color distance divided by LED_FADE_STEPS
+        double ***ledFadeStep; // 3 for each RGB component
+        uint8_t *rainbowStepIndex;
 
         Flashee::FlashDevice* flash;
-        int eepromAddyStripState = 4;  // eeprom addy to store strip state
+        int16_t eepromAddyStripState = 4;  // eeprom addy to store strip state
 
         bool hasPWMStrip = false;
         Adafruit_PWMServoDriver pwmDriver;

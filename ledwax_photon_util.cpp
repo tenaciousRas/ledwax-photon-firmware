@@ -23,11 +23,18 @@ bool LEDWaxPhotonUtil::startsWith(const char *pre, const char *str) {
 }
 
 bool LEDWaxPhotonUtil::isAddressableStrip(uint8_t stripType) {
-    if (stripType == STRIP_TYPE_WS2801 || stripType == STRIP_TYPE_WS2811 || stripType == STRIP_TYPE_WS2812) {
-        return true;
-    } else {
-        return false;
+    bool ret = false;
+    switch (stripType) {
+        case STRIP_TYPE_WS2801:
+        case STRIP_TYPE_WS2811:
+        case STRIP_TYPE_WS2812:
+            ret = true;
+            break;
+        case STRIP_TYPE_PWM:
+        default:
+            ret = false;
     }
+    return ret;
 }
 
 /**

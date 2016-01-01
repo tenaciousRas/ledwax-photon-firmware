@@ -47,39 +47,46 @@
 
 using namespace ledwax;
 
-uint8_t STRIP_TYPES[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2812 };
-uint8_t NUM_LEDS[NUM_STRIPS] = { 1,
-NUM_LEDS_SPARKFUN_WS2801_1METER };
-uint8_t NUM_COLORS_PER_PIXEL[NUM_STRIPS] = { NUM_LEDS_PWM_RGB_STRIP, 3 };
+uint8_t STRIP_TYPES[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2811 };
+uint8_t NUM_LEDS[NUM_STRIPS] = { 1, 60 };
+uint8_t NUM_COLORS_PER_PIXEL[NUM_STRIPS] = { NUM_PIXELS_PER_LED_PWM_RGB_STRIP, 3 };
 uint8_t PWM_STRIP_PINS[NUM_STRIPS][3] = { { 0, 1, 2 }, { } };
 
-LEDWaxPhoton LedWax = LEDWaxPhoton(
+LEDWaxPhoton* LedWax = new LEDWaxPhoton(
         STRIP_TYPES, NUM_LEDS, NUM_COLORS_PER_PIXEL, PWM_STRIP_PINS);
 
 int setLEDParams(String);
+int numStrips = NUM_STRIPS;
+char* stripStateJSON = "{}\0";
+char* message = "{}\0";
 
 void setup() {
 #ifdef _DEBUG_MODE
 #endif
-    LedWax.begin();
+    LedWax->begin();
+    // init watchvars
+    numStrips = LedWax->getNumStrips();
+    strncpy(stripStateJSON, LedWax->getStripStateJSON(), 620);
     // set particle functions
     Particle.function(
             "setLEDParams", &setLEDParams);
-    // set vars
+    // set particle vars
     Particle.variable(
-            "numStrips", &LedWax.numStrips, INT);
+            "numStrips", &numStrips, INT);
     Particle.variable(
-            "stripStateJSON", &LedWax.stripStateJSON, STRING);
+            "stripState", stripStateJSON, STRING);
 #ifdef _DEBUG_MODE
 #endif
 }
 
 void loop() {
-    LedWax.renderAll();
+    LedWax->renderAll();
+    numStrips = LedWax->getNumStrips();
+    strncpy(stripStateJSON, LedWax->getStripStateJSON(), 620);
 }
 
 int setLEDParams(String command) {
-    bool validCommand = false;
+    bool validCommand = true;
     string cmd = string(
             command);
     uint16_t cmdLen = cmd.length();
@@ -90,40 +97,47 @@ int setLEDParams(String command) {
                 ";", cmdDelimPos);
         if (cmdDelimPos != std::string::npos) {
             howManyParams++;
+        } else {
+            if (cmdDelimPos < cmdLen - 1) {
+                howManyParams++;
+            }
+            break;
         }
     }
     string parsedCmds[howManyParams];
     char* cmdPart = strtok(
-            strdup(cmd.c_str()), ",");
+            strdup(cmd.c_str()), ";");
     parsedCmds[0] = string(
             cmdPart);
-    for (int i = 1; i < howManyParams; i++) {
+    for (int i = 1; i <= howManyParams; i++) {
         cmdPart = strtok(
-                NULL, ",");
+                NULL, ";");
+        parsedCmds[i] = cmdPart;
     }
     if (parsedCmds[0] == "qry") {
         // FIXME move to ledwax
-        LedWax.stripStateJSON = LedWax.buildStripStateJSON().c_str();
+        strncpy(stripStateJSON, LedWax->buildStripStateJSON().c_str(), 620);
         // DONE FIXME
-        Particle.publish(
-                "ledStripDisplayState", LedWax.stripStateJSON);
     } else if (parsedCmds[0] == "idx") {
-        LedWax.setRemoteControlStripIndex(
+        LedWax->setRemoteControlStripIndex(
                 parsedCmds[1]);
     } else if (parsedCmds[0] == "col") {
-        LedWax.setLEDStripColor(
-                parsedCmds[1] + "," + parsedCmds[1]);
+        LedWax->setLEDStripColor(
+                parsedCmds[1]);
     } else if (parsedCmds[0] == "brt") {
-        LedWax.setBright(
+        LedWax->setBright(
                 parsedCmds[1]);
     } else if (parsedCmds[0] == "mod") {
-        LedWax.setDispMode(
+        LedWax->setDispMode(
                 parsedCmds[1]);
     } else if (parsedCmds[0] == "mht") {
-        LedWax.setMultiColorHoldTime(
+        LedWax->setMultiColorHoldTime(
                 parsedCmds[1]);
     } else if (parsedCmds[0] == "lfm") {
-        LedWax.setLedFadeMode(
+        LedWax->setLedFadeMode(
+                parsedCmds[1]);
+    } else if (parsedCmds[0] == "lfti") {
+        LedWax->setLedFadeTimeInterval(
                 parsedCmds[1]);
     } else {
         // invalid command
@@ -131,6 +145,9 @@ int setLEDParams(String command) {
     }
     if (!validCommand) {
         return 1;
+    } else {
+        Particle.publish(
+                "ledStripDisplayState", stripStateJSON);
     }
     return 0;
 }
