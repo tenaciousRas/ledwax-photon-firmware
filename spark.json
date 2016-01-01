@@ -1,0 +1,8 @@
+{
+  "name": "ledwax",
+  "author": "Free Beachler",
+  "license": "Berkeley",
+  "version": "0.1",
+  "description": "A LED strip driver for the Photon",
+  "namespace": "LEDWaxPhoton"
+}
