@@ -112,15 +112,16 @@ void setup() {
 
 void loop() {
     LedWax->renderStrips();
+    // refresh particle vars
     numStrips = LedWax->numStrips;
     remoteControlStripIndex = LedWax->remoteControlStripIndex;
-    stripType = LedWax->stripType[LedWax->remoteControlStripIndex];
-    dispMode = LedWax->stripState[LedWax->remoteControlStripIndex].dispMode;
-    ledFadeMode = LedWax->stripState[LedWax->remoteControlStripIndex].ledFadeMode;
-    ledModeColorIndex = LedWax->stripState[LedWax->remoteControlStripIndex].ledModeColorIndex;
-    multiColorHoldTime = LedWax->stripState[LedWax->remoteControlStripIndex].multiColorHoldTime;
-    fadeTimeInterval = LedWax->stripState[LedWax->remoteControlStripIndex].fadeTimeInterval;
-    ledStripBrightness = LedWax->stripState[LedWax->remoteControlStripIndex].ledStripBrightness;
+    stripType = LedWax->stripType[remoteControlStripIndex];
+    dispMode = LedWax->stripState[remoteControlStripIndex].dispMode;
+    ledFadeMode = LedWax->stripState[remoteControlStripIndex].ledFadeMode;
+    ledModeColorIndex = LedWax->stripState[remoteControlStripIndex].ledModeColorIndex;
+    multiColorHoldTime = LedWax->stripState[remoteControlStripIndex].multiColorHoldTime;
+    fadeTimeInterval = LedWax->stripState[remoteControlStripIndex].fadeTimeInterval;
+    ledStripBrightness = LedWax->stripState[remoteControlStripIndex].ledStripBrightness;
 }
 
 int setLEDParams(String command) {
