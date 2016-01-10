@@ -42,14 +42,14 @@ namespace ledwax {
 
     public:
 
-        LEDWaxPhoton(uint8_t[], uint8_t[], uint8_t[], uint8_t[][NUM_PIXELS_PER_LED_PWM_RGB_STRIP]);
+        LEDWaxPhoton(uint8_t[], uint8_t[], uint8_t[], uint8_t***);
         ~LEDWaxPhoton();
 
         typedef struct {
             uint8_t dispMode;
             bool fading;
             uint8_t ledFadeMode; // color fade mode, 0 for entire strip, 1 for swipe pixels
-            int16_t multiColorAltState;  // state of alternating colors
+            uint8_t ledModeColorIndex;  // state of alternating colors
             uint32_t ledModeColor[3];
             uint32_t multiColorHoldTime;
             uint32_t fadeTimeInterval;
@@ -60,23 +60,22 @@ namespace ledwax {
         int16_t numStrips = 0;
         int16_t maxNumPixels = 0;
         int16_t totalNumAddressablePixels = 0;
-        char stripStateJSON[620];
+        uint8_t *stripType, *stripNumPixels, // 1 for PWM strip
+                *stripNumColorsPerPixel;
         uint8_t remoteControlStripIndex = 0;
 
         // METHOD DECLARATIONS
-        void begin(), renderAll(), defaultStripState(uint8_t), readStripState(led_strip_disp_state*), putStripState(
+        void begin(), renderStrips(), defaultStripState(uint8_t), readStripState(led_strip_disp_state*), saveStripState(
                 led_strip_disp_state*), setDispModeColors(uint8_t, int), refreshLEDs(uint8_t), turnOffLEDs(uint8_t),
                 white(uint8_t), solidMultiColor(uint8_t, int), alternatingMultiColor(uint8_t, int), solidOneColor(
                         uint8_t), solidTwoColors(uint8_t), solidThreeColors(uint8_t), alternatingTwoColors(uint8_t),
                 alternatingTwoRandomColors(uint8_t), alternatingThreeColors(uint8_t), startFade(uint8_t), doFade(
                         uint8_t), randomCandy(uint8_t), rainbow(uint8_t, uint16_t), rainbowCycle(uint8_t, uint16_t),
                 colorWipe(uint8_t, uint8_t), renderPixels(uint8_t);
-        string
-        buildStripStateJSON();
-        char*
-        getStripStateJSON();
+        const char
+        *buildStripStateJSON();
         int16_t getNumStrips();
-        int16_t setLEDParams(string), setRemoteControlStripIndex(string), setLEDStripColor(string), setDispMode(string),
+        int16_t setRemoteControlStripIndex(string), setModeLEDColor(string), setDispMode(string),
                 setBright(string), setLedFadeTimeInterval(string), setMultiColorHoldTime(string), setLedFadeMode(
                         string);
         uint32_t rgbColor(uint8_t, uint8_t, uint8_t), wheel(uint8_t);
@@ -84,10 +83,7 @@ namespace ledwax {
     private:
         ledwaxutil::LEDWaxPhotonUtil ledwaxUtil;
 
-        uint8_t *stripType, *stripNumPixels, // 1 for PWM strip
-                *stripNumColorsPerPixel;
         CRGB **addressableStrips;
-        // Adafruit_NeoPixel* addressableStrips[];
         // Initialize strip variables.  Interesting C implementation.  Define two arrays, one for
         // addressable strips, one for PWM.  Effectively define position of strips by populating specific members
         // of each array.
@@ -96,19 +92,8 @@ namespace ledwax {
 
         uint32_t *multiColorNextColorTime;
         uint32_t **ledColor;
-//	{ {
-//	RED,
-//	OFF }, { TWYELLOW, TWBLUE }
-// };
-        //  {RED, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF},
-        //  {TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE, TWYELLOW, TWBLUE}
         uint32_t **ledColorOld;
-//	{ { RED,
-//	OFF }, { TWYELLOW, TWBLUE } };  // color before fade
         uint32_t **ledColorFadeTo;
-//	{ {
-//	RED,
-//	OFF }, { TWYELLOW, TWBLUE } };    // fade-to color
         uint32_t *ledFadeStepTime;  // time to next fade step
         int16_t *ledFadeStepIndex; // color distance divided by LED_FADE_STEPS
         double ***ledFadeStep; // 3 for each RGB component

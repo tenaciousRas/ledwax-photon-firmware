@@ -50,45 +50,82 @@ using namespace ledwax;
 uint8_t STRIP_TYPES[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2811 };
 uint8_t NUM_LEDS[NUM_STRIPS] = { 1, 60 };
 uint8_t NUM_COLORS_PER_PIXEL[NUM_STRIPS] = { NUM_PIXELS_PER_LED_PWM_RGB_STRIP, 3 };
-uint8_t PWM_STRIP_PINS[NUM_STRIPS][3] = { { 0, 1, 2 }, { } };
+uint8_t pwm_pin_defs[NUM_STRIPS][3] = { { 0, 1, 2 }, { } };
+uint8_t **PWM_STRIP_PINS;
 
 LEDWaxPhoton* LedWax = new LEDWaxPhoton(
-        STRIP_TYPES, NUM_LEDS, NUM_COLORS_PER_PIXEL, PWM_STRIP_PINS);
+        STRIP_TYPES, NUM_LEDS, NUM_COLORS_PER_PIXEL, &PWM_STRIP_PINS);
 
 int setLEDParams(String);
 int numStrips = NUM_STRIPS;
-char* stripStateJSON = "{}\0";
-char* message = "{}\0";
+int remoteControlStripIndex, stripType;
+// state members from LedWaxPhoton::led_strip_disp_state
+int dispMode;
+int ledFadeMode;
+int ledModeColorIndex;
+char * ledModeColor; // return a string
+long multiColorHoldTime;
+long fadeTimeInterval;
+double ledStripBrightness;
 
 void setup() {
 #ifdef _DEBUG_MODE
 #endif
     LedWax->begin();
     // init watchvars
-    numStrips = LedWax->getNumStrips();
-    strncpy(stripStateJSON, LedWax->getStripStateJSON(), 620);
     // set particle functions
     Particle.function(
             "setLEDParams", &setLEDParams);
     // set particle vars
+    numStrips = LedWax->numStrips;
+    remoteControlStripIndex = LedWax->remoteControlStripIndex;
+    stripType = LedWax->stripType[LedWax->remoteControlStripIndex];
+    dispMode = LedWax->stripState[LedWax->remoteControlStripIndex].dispMode;
+    ledFadeMode = LedWax->stripState[LedWax->remoteControlStripIndex].ledFadeMode;
+    ledModeColorIndex = LedWax->stripState[LedWax->remoteControlStripIndex].ledModeColorIndex;
+    multiColorHoldTime = LedWax->stripState[LedWax->remoteControlStripIndex].multiColorHoldTime;
+    fadeTimeInterval = LedWax->stripState[LedWax->remoteControlStripIndex].fadeTimeInterval;
+    ledStripBrightness = (double) LedWax->stripState[LedWax->remoteControlStripIndex].ledStripBrightness;
     Particle.variable(
             "numStrips", &numStrips, INT);
     Particle.variable(
-            "stripState", stripStateJSON, STRING);
+            "stripIndex", &remoteControlStripIndex, INT);
+    Particle.variable(
+            "stripType", &stripType, INT);
+    Particle.variable(
+            "dispMode", &dispMode, INT);
+    //    Particle.variable(
+    //            "modeColor", &ledModeColor, INT);
+    Particle.variable(
+            "modeColorIdx", &ledModeColorIndex, INT);
+    Particle.variable(
+            "brightness", &ledStripBrightness, DOUBLE);
+    Particle.variable(
+            "fadeMode", &ledFadeMode, INT);
+    Particle.variable(
+            "fadeTime", &fadeTimeInterval, INT);
+    Particle.variable(
+            "colorTime", &multiColorHoldTime, INT);
 #ifdef _DEBUG_MODE
 #endif
 }
 
 void loop() {
-    LedWax->renderAll();
-    numStrips = LedWax->getNumStrips();
-    strncpy(stripStateJSON, LedWax->getStripStateJSON(), 620);
+    LedWax->renderStrips();
+    numStrips = LedWax->numStrips;
+    remoteControlStripIndex = LedWax->remoteControlStripIndex;
+    stripType = LedWax->stripType[LedWax->remoteControlStripIndex];
+    dispMode = LedWax->stripState[LedWax->remoteControlStripIndex].dispMode;
+    ledFadeMode = LedWax->stripState[LedWax->remoteControlStripIndex].ledFadeMode;
+    ledModeColorIndex = LedWax->stripState[LedWax->remoteControlStripIndex].ledModeColorIndex;
+    multiColorHoldTime = LedWax->stripState[LedWax->remoteControlStripIndex].multiColorHoldTime;
+    fadeTimeInterval = LedWax->stripState[LedWax->remoteControlStripIndex].fadeTimeInterval;
+    ledStripBrightness = LedWax->stripState[LedWax->remoteControlStripIndex].ledStripBrightness;
 }
 
 int setLEDParams(String command) {
     bool validCommand = true;
-    string cmd = string(
-            command);
+    string cmd = command.c_str();
     uint16_t cmdLen = cmd.length();
     uint8_t howManyParams = 0;
     uint16_t cmdDelimPos = 0;
@@ -104,25 +141,22 @@ int setLEDParams(String command) {
             break;
         }
     }
+    // TODO combine with above loop
     string parsedCmds[howManyParams];
     char* cmdPart = strtok(
             strdup(cmd.c_str()), ";");
     parsedCmds[0] = string(
             cmdPart);
-    for (int i = 1; i <= howManyParams; i++) {
+    for (int i = 1; i < howManyParams; i++) {
         cmdPart = strtok(
                 NULL, ";");
         parsedCmds[i] = cmdPart;
     }
-    if (parsedCmds[0] == "qry") {
-        // FIXME move to ledwax
-        strncpy(stripStateJSON, LedWax->buildStripStateJSON().c_str(), 620);
-        // DONE FIXME
-    } else if (parsedCmds[0] == "idx") {
+    if (parsedCmds[0] == "idx") {
         LedWax->setRemoteControlStripIndex(
                 parsedCmds[1]);
     } else if (parsedCmds[0] == "col") {
-        LedWax->setLEDStripColor(
+        LedWax->setModeLEDColor(
                 parsedCmds[1]);
     } else if (parsedCmds[0] == "brt") {
         LedWax->setBright(
@@ -146,8 +180,8 @@ int setLEDParams(String command) {
     if (!validCommand) {
         return 1;
     } else {
-        Particle.publish(
-                "ledStripDisplayState", stripStateJSON);
+//        Particle.publish(
+//                "ledStripDisplayState", stripStateJSON);
     }
     return 0;
 }
