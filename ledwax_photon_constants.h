@@ -24,10 +24,11 @@
 #define TWBLUE 0x00A5D5
 
 #define STRIP_TYPE_WS2801 1
-#define STRIP_TYPE_WS2811 2  // TODO support
-#define STRIP_TYPE_WS2812 3  // TODO support
+#define STRIP_TYPE_WS2811 2
+#define STRIP_TYPE_WS2812 3
 #define STRIP_TYPE_PWM  10
 
+#define MAX_NUM_MODE_COLORS 3
 #define NUM_PIXELS_PER_LED_PWM_WHITE_STRIP  1  // single color PWM
 #define NUM_PIXELS_PER_LED_PWM_RGB_STRIP  3  // RGB PWM
 

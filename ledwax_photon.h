@@ -42,7 +42,7 @@ namespace ledwax {
 
     public:
 
-        LEDWaxPhoton(uint8_t[], uint8_t[], uint8_t[], uint8_t***);
+        LEDWaxPhoton(uint8_t, uint8_t*, uint8_t*, uint8_t*, uint8_t***);
         ~LEDWaxPhoton();
 
         typedef struct {
@@ -50,7 +50,7 @@ namespace ledwax {
             bool fading;
             uint8_t ledFadeMode; // color fade mode, 0 for entire strip, 1 for swipe pixels
             uint8_t ledModeColorIndex;  // state of alternating colors
-            uint32_t ledModeColor[3];
+            uint32_t ledModeColor[MAX_NUM_MODE_COLORS];
             uint32_t multiColorHoldTime;
             uint32_t fadeTimeInterval;
             float ledStripBrightness;
@@ -60,8 +60,7 @@ namespace ledwax {
         int16_t numStrips = 0;
         int16_t maxNumPixels = 0;
         int16_t totalNumAddressablePixels = 0;
-        uint8_t *stripType, *stripNumPixels, // 1 for PWM strip
-                *stripNumColorsPerPixel;
+        uint8_t *stripType, *stripNumPixels, *stripNumColorsPerPixel;
         uint8_t remoteControlStripIndex = 0;
 
         // METHOD DECLARATIONS
@@ -74,10 +73,11 @@ namespace ledwax {
                 colorWipe(uint8_t, uint8_t), renderPixels(uint8_t);
         const char
         *buildStripStateJSON();
+        const char
+        *buildLEDDispStateColorString(int);
         int16_t getNumStrips();
-        int16_t setRemoteControlStripIndex(string), setModeLEDColor(string), setDispMode(string),
-                setBright(string), setLedFadeTimeInterval(string), setMultiColorHoldTime(string), setLedFadeMode(
-                        string);
+        int16_t setRemoteControlStripIndex(string), setModeLEDColor(string), setDispMode(string), setBright(string),
+                setLedFadeTimeInterval(string), setMultiColorHoldTime(string), setLedFadeMode(string);
         uint32_t rgbColor(uint8_t, uint8_t, uint8_t), wheel(uint8_t);
 
     private:
@@ -88,7 +88,7 @@ namespace ledwax {
         // addressable strips, one for PWM.  Effectively define position of strips by populating specific members
         // of each array.
         // FIXME improve implementation
-        uint8_t **pwmStripPins;
+        uint8_t **stripPins;
 
         uint32_t *multiColorNextColorTime;
         uint32_t **ledColor;

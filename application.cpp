@@ -41,29 +41,31 @@
 
 #define _DEBUG_MODE 1
 
-// LED Strip setup
-// set number of LED strips
-#define NUM_STRIPS 2
-
 using namespace ledwax;
 
-uint8_t STRIP_TYPES[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2811 };
-uint8_t NUM_LEDS[NUM_STRIPS] = { 1, 60 };
-uint8_t NUM_COLORS_PER_PIXEL[NUM_STRIPS] = { NUM_PIXELS_PER_LED_PWM_RGB_STRIP, 3 };
-uint8_t pwm_pin_defs[NUM_STRIPS][3] = { { 0, 1, 2 }, { } };
-uint8_t **PWM_STRIP_PINS;
+// LED Strip setup
+// *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
+#define NUM_STRIPS 2
+uint8_t stripTypes[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2811 };
+uint8_t numLeds[NUM_STRIPS] = { 1, 60 };
+uint8_t numColorsPerPixel[NUM_STRIPS] = { NUM_PIXELS_PER_LED_PWM_RGB_STRIP, 3 };
+// TODO unfortunately FASTLED seems to require static pin assignment
+uint8_t pinDefs[NUM_STRIPS][3] = { { 0, 1, 2 }, { A5 } };  // only PWM mapping used
+// *********** END EDIT THIS SECTION ***********
 
-LEDWaxPhoton* LedWax = new LEDWaxPhoton(
-        STRIP_TYPES, NUM_LEDS, NUM_COLORS_PER_PIXEL, &PWM_STRIP_PINS);
-
+// function prototypes
 int setLEDParams(String);
-int numStrips = NUM_STRIPS;
-int remoteControlStripIndex, stripType;
-// state members from LedWaxPhoton::led_strip_disp_state
-int dispMode;
-int ledFadeMode;
-int ledModeColorIndex;
-char * ledModeColor; // return a string
+// global vars
+int numStrips = NUM_STRIPS;     //particle var
+uint8_t *STRIP_TYPES = &stripTypes[0];
+uint8_t *NUM_LEDS = &numLeds[0];
+uint8_t *NUM_COLORS_PER_PIXEL = &numColorsPerPixel[0];
+uint8_t **STRIP_PINS = (uint8_t **) &pinDefs[0][0];
+ledwax::LEDWaxPhoton* LedWax = new LEDWaxPhoton(
+        (uint8_t) numStrips, &STRIP_TYPES[0], &NUM_LEDS[0], &NUM_COLORS_PER_PIXEL[0], &STRIP_PINS);
+// particle vars = state members from LedWaxPhoton::led_strip_disp_state
+int remoteControlStripIndex, stripType, dispMode, ledFadeMode, ledModeColorIndex;
+char *ledModeColor = new char[620]; // return a string
 long multiColorHoldTime;
 long fadeTimeInterval;
 double ledStripBrightness;
@@ -76,12 +78,15 @@ void setup() {
     // set particle functions
     Particle.function(
             "setLEDParams", &setLEDParams);
-    // set particle vars
+    // set particle vars - copy from object to global state
     numStrips = LedWax->numStrips;
     remoteControlStripIndex = LedWax->remoteControlStripIndex;
     stripType = LedWax->stripType[LedWax->remoteControlStripIndex];
     dispMode = LedWax->stripState[LedWax->remoteControlStripIndex].dispMode;
     ledFadeMode = LedWax->stripState[LedWax->remoteControlStripIndex].ledFadeMode;
+//    strncpy(ledModeColor, LedWax->buildLEDDispStateColorString(
+//            LedWax->remoteControlStripIndex),
+//            620);
     ledModeColorIndex = LedWax->stripState[LedWax->remoteControlStripIndex].ledModeColorIndex;
     multiColorHoldTime = LedWax->stripState[LedWax->remoteControlStripIndex].multiColorHoldTime;
     fadeTimeInterval = LedWax->stripState[LedWax->remoteControlStripIndex].fadeTimeInterval;
@@ -94,8 +99,8 @@ void setup() {
             "stripType", &stripType, INT);
     Particle.variable(
             "dispMode", &dispMode, INT);
-    //    Particle.variable(
-    //            "modeColor", &ledModeColor, INT);
+//    Particle.variable(
+//            "modeColor", ledModeColor, STRING);
     Particle.variable(
             "modeColorIdx", &ledModeColorIndex, INT);
     Particle.variable(
@@ -112,12 +117,15 @@ void setup() {
 
 void loop() {
     LedWax->renderStrips();
-    // refresh particle vars
+    // refresh particle vars - from object to global state
     numStrips = LedWax->numStrips;
     remoteControlStripIndex = LedWax->remoteControlStripIndex;
     stripType = LedWax->stripType[remoteControlStripIndex];
     dispMode = LedWax->stripState[remoteControlStripIndex].dispMode;
     ledFadeMode = LedWax->stripState[remoteControlStripIndex].ledFadeMode;
+//    strncpy(ledModeColor, LedWax->buildLEDDispStateColorString(
+//            LedWax->remoteControlStripIndex),
+//            620);
     ledModeColorIndex = LedWax->stripState[remoteControlStripIndex].ledModeColorIndex;
     multiColorHoldTime = LedWax->stripState[remoteControlStripIndex].multiColorHoldTime;
     fadeTimeInterval = LedWax->stripState[remoteControlStripIndex].fadeTimeInterval;
