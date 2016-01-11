@@ -1,5 +1,5 @@
 #include <string>
-#include <stdlib.h>
+#include <cstdlib>
 #include "lib/spark-flashee-eeprom/flashee-eeprom.h"
 #include "lib/fastled/firmware/FastLED.h"
 #include "ledwax_photon.h"
@@ -24,6 +24,7 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numPixels, uint8_t *stripType, uint8_t *strip
     this->stripNumPixels = &stripNumPixels[0];
     this->stripNumColorsPerPixel = &stripNumColorsPerPixel[0];
     this->stripState = new led_strip_disp_state[numStrips];
+    this->ledModeColorJSONArr = new char[620];
     for (int i = 0; i < numStrips; i++) {
         this->totalNumAddressablePixels += this->stripNumPixels[i];
         if (this->stripNumPixels[i] > this->maxNumPixels) {
@@ -117,24 +118,6 @@ LEDWaxPhoton::~LEDWaxPhoton() {
 
 int16_t LEDWaxPhoton::getNumStrips() {
     int ret = numStrips;
-    return ret;
-}
-
-const char * LEDWaxPhoton::buildLEDDispStateColorString(int stripNum) {
-    // +4 for [] and commas
-    uint16_t retSz = stripNumColorsPerPixel[stripNum] * MAX_NUM_MODE_COLORS + 4;
-    char *ret = new char[retSz];
-    ret[0] = '[';
-    uint8_t idx = 1;
-    for (int i = 0; i < MAX_NUM_MODE_COLORS; i++) {
-        for (int j = stripNumColorsPerPixel[stripNum] - 1; j >= 0; idx++, j--) {
-            ret[idx] = ((uint8_t) ((stripState[stripNum].ledModeColor[i] >> (8 * j)) & 0xFF));
-        }
-        if (i < MAX_NUM_MODE_COLORS - 1) {
-            ret[idx++] = ',';
-        }
-    }
-    ret[retSz - 1] = ']';
     return ret;
 }
 
@@ -339,8 +322,25 @@ void LEDWaxPhoton::saveStripState(led_strip_disp_state* lsds) {
 #endif
 }
 
+const char * LEDWaxPhoton::buildLedModeColorJSONArr(int stripNum) {
+    string ret = "";
+    char convBuf[16] = { 32 };
+    ret += "[";
+    for (int i = 0; i < MAX_NUM_MODE_COLORS; i++) {
+        ltoa((long) stripState[stripNum].ledModeColor[i], convBuf, 16);
+        ret += (string) convBuf;
+        if (i < MAX_NUM_MODE_COLORS - 1) {
+            ret += ",";
+        }
+    }
+    ret += "]";
+    strncpy(ledModeColorJSONArr, ret.c_str(), 620);
+    return ret.c_str();
+}
+
 /**
  * build JSON verson of class state.
+ * FIXME: not usable due to photon 620 char limit
  * TODO: use LEDWaxPhoton as param and move to utils; then finish testing when usable
  */
 const char * LEDWaxPhoton::buildStripStateJSON() {
@@ -349,34 +349,34 @@ const char * LEDWaxPhoton::buildStripStateJSON() {
     ret += "{ ledStripDisplayState:[";
     for (int i = 0; i < numStrips; i++) {
         ret += "{";
-        itoa(stripType[i], convBuf, 2);
+        itoa(stripType[i], convBuf, 10);
         ret += "type:'" + (string) convBuf + "'";
         ret += ",";
-        itoa(stripNumPixels[i], convBuf, 2);
+        itoa(stripNumPixels[i], convBuf, 10);
         ret += "pixNum:'" + (string) convBuf + "'";
         ret += ",";
-        itoa(stripState[i].ledFadeMode, convBuf, 2);
+        itoa(stripState[i].ledFadeMode, convBuf, 10);
         ret += "fadeMode:'" + (string) convBuf + "'";
         ret += ",";
-        itoa(stripState[i].ledStripBrightness, convBuf, 2);
+        itoa(stripState[i].ledStripBrightness, convBuf, 10);
         ret += "bright:'" + (string) convBuf + "'";
         ret += ",";
         ret += "modeColor:[";
         for (int j = 0; j < stripNumColorsPerPixel[i]; j++) {
-            itoa(stripState[i].ledModeColor[j], convBuf, 2);
+            itoa(stripState[i].ledModeColor[j], convBuf, 16);
             ret += (string) convBuf;
             if (j < (stripNumColorsPerPixel[i] - 1)) {
                 ret += ",";
             }
         }
         ret += "],";
-        itoa(stripState[i].ledModeColorIndex, convBuf, 2);
+        itoa(stripState[i].ledModeColorIndex, convBuf, 10);
         ret += "mcAltState:'" + (string) convBuf + "'";
         ret += ",";
-        ltoa(stripState[i].multiColorHoldTime, convBuf, 4);
+        ltoa(stripState[i].multiColorHoldTime, convBuf, 16);
         ret += "mcHoldTime:'" + (string) convBuf + "'";
         ret += ",";
-        ltoa(stripState[i].fadeTimeInterval, convBuf, 4);
+        ltoa(stripState[i].fadeTimeInterval, convBuf, 16);
         ret += "fadeTime:'" + (string) convBuf;
         ret += "'";
         ret += "}";

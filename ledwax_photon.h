@@ -57,6 +57,7 @@ namespace ledwax {
         } led_strip_disp_state;
 
         led_strip_disp_state *stripState;
+        char *ledModeColorJSONArr;    // ugh - stored for particle var
         int16_t numStrips = 0;
         int16_t maxNumPixels = 0;
         int16_t totalNumAddressablePixels = 0;
@@ -72,9 +73,8 @@ namespace ledwax {
                         uint8_t), randomCandy(uint8_t), rainbow(uint8_t, uint16_t), rainbowCycle(uint8_t, uint16_t),
                 colorWipe(uint8_t, uint8_t), renderPixels(uint8_t);
         const char
-        *buildStripStateJSON();
-        const char
-        *buildLEDDispStateColorString(int);
+        *buildStripStateJSON(),
+        *buildLedModeColorJSONArr(int);
         int16_t getNumStrips();
         int16_t setRemoteControlStripIndex(string), setModeLEDColor(string), setDispMode(string), setBright(string),
                 setLedFadeTimeInterval(string), setMultiColorHoldTime(string), setLedFadeMode(string);
