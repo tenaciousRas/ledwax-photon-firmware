@@ -68,7 +68,7 @@ int remoteControlStripIndex, stripType, dispMode, ledFadeMode, ledModeColorIndex
 char *ledModeColor = new char[620]; // return a string
 long multiColorHoldTime;
 long fadeTimeInterval;
-double ledStripBrightness;
+int ledStripBrightness;
 
 void setup() {
 #ifdef _DEBUG_MODE
@@ -89,7 +89,7 @@ void setup() {
     ledModeColorIndex = LedWax->stripState[LedWax->remoteControlStripIndex].ledModeColorIndex;
     multiColorHoldTime = LedWax->stripState[LedWax->remoteControlStripIndex].multiColorHoldTime;
     fadeTimeInterval = LedWax->stripState[LedWax->remoteControlStripIndex].fadeTimeInterval;
-    ledStripBrightness = (double) LedWax->stripState[LedWax->remoteControlStripIndex].ledStripBrightness;
+    ledStripBrightness = (int) ((float) LedWax->stripState[LedWax->remoteControlStripIndex].ledStripBrightness * (float) 255.0);
     Particle.variable(
             "numStrips", &numStrips, INT);
     Particle.variable(
@@ -103,7 +103,7 @@ void setup() {
     Particle.variable(
             "modeColorIdx", &ledModeColorIndex, INT);
     Particle.variable(
-            "brightness", &ledStripBrightness, DOUBLE);
+            "brightness", &ledStripBrightness, INT);
     Particle.variable(
             "fadeMode", &ledFadeMode, INT);
     Particle.variable(
@@ -127,7 +127,7 @@ void loop() {
     ledModeColorIndex = LedWax->stripState[remoteControlStripIndex].ledModeColorIndex;
     multiColorHoldTime = LedWax->stripState[remoteControlStripIndex].multiColorHoldTime;
     fadeTimeInterval = LedWax->stripState[remoteControlStripIndex].fadeTimeInterval;
-    ledStripBrightness = LedWax->stripState[remoteControlStripIndex].ledStripBrightness;
+    ledStripBrightness = (int) ((float) LedWax->stripState[LedWax->remoteControlStripIndex].ledStripBrightness * (float) 255.0);
 }
 
 int setLEDParams(String command) {
