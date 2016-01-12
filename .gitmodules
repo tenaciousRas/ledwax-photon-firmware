@@ -1,0 +1,3 @@
+[submodule "FastLED"]
+	path = lib/fastled
+	url = https://github.com/focalintent/FastLED-Sparkcore
