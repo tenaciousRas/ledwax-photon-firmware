@@ -58,7 +58,7 @@ Understanding the above concepts will allow for basic control using raw commands
 LEDWax-Photon is built for the Photon so REST API [variables](https://docs.particle.io/reference/api/#get-a-variable-value "particle variables") and [functions](https://docs.particle.io/reference/api/#call-a-function "particle functions") are accessed through the Particle Cloud.
 
 ## [Variables][particle-vars]
-The folowing particle cloud variables are exposed:
+The following particle cloud variables are exposed:
 * "numStrips": "int32" - number of LED strips configured in firmware
 * "stripIndex": "int32" - current strip being controlled 
 * "stripType": "int32" - type of (current) strip
@@ -71,7 +71,7 @@ The folowing particle cloud variables are exposed:
 * "colorTime": "int32" - time spent displaying each color assigned to color mode
 
 ## [Functions][particle-funcs]
-LEDWAX Photon exposes the following particle cloud functions:
+The following particle cloud functions are exposed:
 * setLEDParams(String command) : send command to LED strip
 * resetAll(String command) : reset all LED strips
 

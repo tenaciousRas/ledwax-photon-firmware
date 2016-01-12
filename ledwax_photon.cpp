@@ -62,8 +62,9 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numPixels, uint8_t *stripType, uint8_t *strip
                 sizeof(double *) * this->maxNumPixels);
         *this->ledFadeStep[i] = (double *) malloc(
                 sizeof(double) * 3);
-        this->addressableStrips[i] = (CRGB *) malloc(
-                sizeof(CRGB) * this->totalNumAddressablePixels);
+        this->addressableStrips[i] = new CRGB[this->totalNumAddressablePixels];
+//        this->addressableStrips[i] = (CRGB *) malloc(
+//                sizeof(CRGB) * this->totalNumAddressablePixels);
         if (ledwaxUtil.isAddressableStrip(
                 this->stripType[i])) {
             switch (this->stripType[i]) {
@@ -100,7 +101,8 @@ LEDWaxPhoton::~LEDWaxPhoton() {
         free(this->ledColor[i]);
         free(this->ledColorOld[i]);
         free(this->ledColorFadeTo[i]);
-        free(this->addressableStrips[i]);
+//        free(this->addressableStrips[i]);
+        delete this->addressableStrips[i];
         free(this->ledFadeStep[i][0]);
         free(this->ledFadeStep[i][1]);
         free(this->ledFadeStep[i][2]);
@@ -882,6 +884,7 @@ void LEDWaxPhoton::colorWipe(uint8_t stripNum, uint8_t wait) {
         }
         addressableStrips[stripNum][i].setColorCode(
                 brightnessCorrectedColor);
+        FastLED.show();
 //        FastLED.showColor(
 //                CRGB(ledColor[stripNum][i]));
         delay(wait);
@@ -919,6 +922,7 @@ void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
                 }
                 addressableStrips[stripNum][i].setColorCode(
                         brightnessCorrectedColor);
+                FastLED.show();
 //                FastLED.showColor(
 //                        CRGB(ledColor[stripNum][i]), brightScale);
             }
