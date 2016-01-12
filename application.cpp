@@ -39,8 +39,6 @@
  */
 #include "ledwax_photon.h"
 
-#define _DEBUG_MODE 1
-
 using namespace ledwax;
 
 // LED Strip setup
@@ -74,8 +72,6 @@ long fadeTimeInterval;
 int ledStripBrightness;
 
 void setup() {
-#ifdef _DEBUG_MODE
-#endif
     LedWax->begin();
     // init watchvars
     // set particle functions
@@ -105,7 +101,7 @@ void setup() {
             "fadeTime", &fadeTimeInterval, INT);
     Particle.variable(
             "colorTime", &multiColorHoldTime, INT);
-#ifdef _DEBUG_MODE
+#ifdef __LWAX_PHOTON_DEBUG_MODE
 #endif
 }
 
@@ -199,7 +195,7 @@ int setLEDParams(String command) {
 /**
  * Handler for setLedParams() Particle function.
  */
-int resetAllStripsToDefault() {
+int resetAllStripsToDefault(String command) {
     LedWax->resetAllStripsToDefault();
     return 0;
 }

@@ -26,17 +26,22 @@ An IoT LED controller for Particle Photon with support for PWM LEDs and WS28xx L
 
 NOTE: Sparkfun WS2801 strip support is restored but untested.
 
-### Software Configuration
+### Firmware Configuration
 Edit the code in application.cpp.  For example, where we have two strips, one PWM and another WS2812-type (2 strips):
 ```
-	#define NUM_STRIPS 2
-	uint8_t STRIP_TYPES[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2812 };
-	uint8_t NUM_LEDS[NUM_STRIPS] = { 1, 60 };
-	uint8_t NUM_COLORS_PER_PIXEL[NUM_STRIPS] = { NUM_LEDS_PWM_RGB_STRIP, 3 };
-	uint8_t PWM_STRIP_PINS[NUM_STRIPS][3] = { { 0, 1, 2 }, { } };
+// *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
+#define NUM_STRIPS 2
+uint8_t stripTypes[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2811 };
+uint8_t numLeds[NUM_STRIPS] = { 1, 60 };
+uint8_t numColorsPerPixel[NUM_STRIPS] = { NUM_PIXELS_PER_LED_PWM_RGB_STRIP, 3 };
+// TODO unfortunately FASTLED seems to require static pin assignment
+uint8_t pinDefs[NUM_STRIPS][3] = { { 0, 1, 2 }, { A5 } };  // only PWM mapping used
+// *********** END EDIT THIS SECTION ***********
 ```
 
-# Usage
+Note:  Please refer to ledwax_photon_constants.h and spark particle application.h for useful constants in this section.
+
+# Firmware Usage
 Setup LEDWax Photon with a LED strip and a Particle Photon.  Then control the strip using the exposed REST API.
 
 There are only 2 or 3 basic concepts you need to understand for controlling the strips.  First, there is a "mod" command that tells LEDWax how many colors to display and how to cycle through them.  Sending a valid "mod" command will cause the value of the "ledDisplayMode" particle variable to be updated.
@@ -56,8 +61,8 @@ The folowing particle cloud variables are exposed:
 * "stripIndex": "int32" - current strip being controlled 
 * "stripType": "int32" - type of (current) strip
 * "dispMode": "int32" - display mode of (current) strip
-* "modeColor": "string" - colors assigned to current mode of (current) strip
-* "modeColorIdx": "int32" - current color being displayed of (current) strip
+* "modeColor": "string" - A a JSON array representing the colors assigned to current mode of (current) strip.  For example, [FF, A5D5, 00].
+* "modeColorIdx": "int32" - index of modeColor array currently displayed on the (current) strip
 * "brightness": "int32" - brightness of (current) strip
 * "fadeMode": "int32" - color transition mode of (current) strip
 * "fadeTime": "int32" - time spent on color transitions of (current) strip
@@ -66,6 +71,10 @@ The folowing particle cloud variables are exposed:
 ##Functions
 LEDWAX Photon exposes the following particle cloud functions:
 * setLEDParams(String command) : send command to LED strip
+* resetAll(String command) : reset all LED strips
+
+#### resetAll(String command)
+Resets all LED strips to firmware defaults.  Stores firmware defaults in EEPROM also, so they remain until re-configured.
 
 #### setLEDParams(String command)
 The format for "command" is:

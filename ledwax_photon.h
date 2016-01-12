@@ -9,8 +9,9 @@
 FASTLED_USING_NAMESPACE
 using namespace std;
 
-#define _LWAX_PHOTON_VERSION 5  // it's probably more like v.100
-#define _LWAX_PHOTON_DEBUG_MODE 1
+#define _LWAX_PHOTON_VERSION 6  // it's probably more like v.100
+#define _LWAX_PHOTON_DEBUG_MODE 1   // comment out to disable
+// #define _LWAX_PHOTON_SERIAL_DEBUG_MODE 1   // comment out to disable
 
 /**
  * display mode values:
