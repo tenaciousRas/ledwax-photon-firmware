@@ -557,7 +557,7 @@ int16_t LEDWaxPhoton::setLedFadeMode(string command) {
     if (1 < bData) {
         bData = 0;
     }
-    stripState[remoteControlStripIndex].ledFadeMode = bData;
+    stripState[remoteControlStripIndex].ledFadeMode = (uint8_t) bData;
     saveStripState(
             &stripState[remoteControlStripIndex]);
 #ifdef DEBUG_MODE
@@ -704,6 +704,9 @@ void LEDWaxPhoton::startFade(uint8_t stripNum) {
     }
 }
 
+/**
+ * Fade strip colors for time-sliced rendering.
+ */
 void LEDWaxPhoton::doFade(uint8_t stripNum) {
     if (!stripState[stripNum].fading) {
         return;
@@ -767,7 +770,7 @@ void LEDWaxPhoton::doFade(uint8_t stripNum) {
 }
 
 /**
- * Throws random colors down the strip array.
+ * Throws random colors down the strip.
  */
 void LEDWaxPhoton::randomCandy(uint8_t stripNum) {
     if (multiColorNextColorTime[stripNum] - millis() > stripState[stripNum].multiColorHoldTime) {
@@ -783,6 +786,9 @@ void LEDWaxPhoton::randomCandy(uint8_t stripNum) {
     }
 }
 
+/**
+ * Cycles the strip through a rainbow wheel of colors.
+ */
 void LEDWaxPhoton::rainbow(uint8_t stripNum, uint16_t wait) {
     if (multiColorNextColorTime[stripNum] - millis() > wait) {
         int i;
@@ -800,8 +806,10 @@ void LEDWaxPhoton::rainbow(uint8_t stripNum, uint16_t wait) {
     }
 }
 
-// Slightly different, this one makes the rainbow wheel equally distributed
-// along the chain
+/**
+ * Slightly different, this one makes the rainbow wheel equally distributed
+ * along the strip.
+ */
 void LEDWaxPhoton::rainbowCycle(uint8_t stripNum, uint16_t wait) {
     if (multiColorNextColorTime[stripNum] - millis() > wait) {
         int i;
@@ -821,24 +829,42 @@ void LEDWaxPhoton::rainbowCycle(uint8_t stripNum, uint16_t wait) {
     }
 }
 
-// fill the dots one after the other with set colors
-// good for testing purposes
+
+
+/**
+ * Render pixels one after the other with set colors.
+ * BLOCKING!  Not time-sliced!
+ */
 void LEDWaxPhoton::colorWipe(uint8_t stripNum, uint8_t wait) {
     if (stripType[stripNum] != STRIP_TYPE_WS2801 && stripType[stripNum] != STRIP_TYPE_WS2811
             && stripType[stripNum] != STRIP_TYPE_WS2812) {
         return;
     }
-    int i;
-    for (i = 0; i < stripNumPixels[stripNum]; i++) {
-        FastLED.showColor(
-                CRGB(ledColor[stripNum][i]));
+    float brightness = stripState[stripNum].ledStripBrightness;
+    int brightScale = (int) (brightness * 255.0);
+    uint32_t ledColorFadeToChannels[stripNumColorsPerPixel[stripNum]] = { 0 };
+    uint32_t brightnessCorrectedColor = 0;
+    for (int i = 0; i < stripNumPixels[stripNum]; i++) {
+        brightnessCorrectedColor = 0;
+        for (int j = 0; j < stripNumColorsPerPixel[stripNum]; j++) {
+            ledColorFadeToChannels[j] = ((float) ((ledColor[stripNum][i] >> (8 * j)) & 0xFF) * brightness);
+            brightnessCorrectedColor = brightnessCorrectedColor
+                    | ((uint32_t) ledColorFadeToChannels[j] << (8 * j)); // use rgbColor(...)?
+        }
+        addressableStrips[stripNum][i] = CRGB(brightnessCorrectedColor);
+//        FastLED.showColor(
+//                CRGB(ledColor[stripNum][i]));
         delay(wait);
     }
 }
 
+/**
+ * Render pixels for all strips.  Time-slice compatible.
+ */
 void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
     float brightness = stripState[stripNum].ledStripBrightness;
-    uint32_t ledColorFadeToChannels[stripNumColorsPerPixel[stripNum]];
+    int brightScale = (int) (brightness * 255.0);
+    uint32_t ledColorFadeToChannels[stripNumColorsPerPixel[stripNum]] = { 0 };
     uint32_t brightnessCorrectedColor = 0;
     switch (stripType[stripNum]) {
         case STRIP_TYPE_PWM:
@@ -855,13 +881,15 @@ void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
         case STRIP_TYPE_WS2812:
         default:
             for (int i = 0; i < stripNumPixels[stripNum]; i++) {
+                brightnessCorrectedColor = 0;
                 for (int j = 0; j < stripNumColorsPerPixel[stripNum]; j++) {
                     ledColorFadeToChannels[j] = ((float) ((ledColor[stripNum][i] >> (8 * j)) & 0xFF) * brightness);
                     brightnessCorrectedColor = brightnessCorrectedColor
-                            | ((uint32_t) ledColorFadeToChannels[j] << (8 * j)); // use rgbColor(...)?
+                            | ((uint32_t) ledColorFadeToChannels[j] << (8 * j));
                 }
-                FastLED.showColor(
-                        CRGB(ledColor[stripNum][i]));
+                addressableStrips[stripNum][i] = CRGB(brightnessCorrectedColor);
+//                FastLED.showColor(
+//                        CRGB(ledColor[stripNum][i]), brightScale);
             }
             break;
     }
