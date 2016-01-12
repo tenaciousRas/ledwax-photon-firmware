@@ -100,7 +100,7 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 >		22. random candy
 >		30. cylon
 
->	mht : Set multi-color-hold-time.  The multi-color-hold-time determines how long each color is displayed before the transition to the next color.  Valid values are [0-65535] (16-bit integer).
+>	mht : Set multi-color-hold-time.  The multi-color-hold-time determines how long each color is displayed before the transition to the next color.  Valid values are [[0-65535] (16-bit integer).
 
 >	lfm : Set LED-fade-mode.  The LED-fade-mode is the style of transition for certain display modes.  A value of 0 disables the fade color transition, so colors switch immediately.  A value of 1 enables the fade transition.  This only applies to display modes 0 - 10.
 
