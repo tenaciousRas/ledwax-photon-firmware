@@ -40,7 +40,7 @@ Setup LEDWax Photon with a LED strip and a Particle Photon.  Then control the st
 
 There are only 2 or 3 basic concepts you need to understand for controlling the strips.  First, there is a "mod" command that tells LEDWax how many colors to display and how to cycle through them.  Sending a valid "mod" command will cause the value of the "ledDisplayMode" particle variable to be updated.
 
-Several display modes are supported, and their behavior varies but there are two (2) basic families of display modes.  In "family 1" the user can configure up to 3 different colors which can be displayed in different ways on the strip.  In "family 2" the colors are pre-set, and the user may have the option to customize a parameter of the display mode (for example:  cycle through a rainbox of pre-defined colors, user-defined length of time to cycle). 
+Several display modes are supported.  Their behavior varies but there are two (2) basic families of display modes.  In "family 1" the user can configure up to 3 different colors which can be displayed in different ways on the strip.  In "family 2" the colors are pre-set, and the user may have the option to customize a parameter of the display mode (for example:  cycle through a rainbow of pre-defined colors, user-defined length of time to cycle). 
 
 If the displayMode parameter is set to a "family 1" mode, then colors can be customized using the "col" command.
 
@@ -68,21 +68,21 @@ LEDWAX Photon exposes the following particle cloud functions:
 
 #### setLEDParams(String command)
 The format for "command" is:
-> [command-name][value]?[,value]*
+> [command-name];[cmd-value]?[,cmd-value]*
 
-There is no space between the command-name and value(s).  All commands require a value - except "qry".  Some commands accept more than one value, such as "col" (color).  Multiple values are comma-separated.  Commands are terminated with C++ string termination (\0).
+There is no space between the command-name and cmd-value(s).  All commands require a cmd-value - except "qry".  Some commands accept more than one cmd-value, such as "col" (color).  Multiple cmd-values are comma-separated.  Commands are terminated with C++ string termination (\0).
 
 "command-name" can be one of the following:
 >	qry : TBD
 
 >	idx : set LED command index -- all following commands will be executed against this LED strip.  Min value is 0, max value is NUM_STRIPS - 1.  Default is 0.
 
->	col : set LED pixel color.  Format:
+>	col : set LED pixel color.  cmd-value must ahere to the following format:
 
 >		[mode-color-index],[decimal-value-0-to-255]
 >	where mode-color-index is the index of the mode color (family 1 display mode) to set
 
->	brt : set strip brightness.  Brightness is stored sepearately from color in firmware.
+>	brt : set strip brightness. Valid values are from 0 (0% = full off) to 255 (100% = full on).  Brightness is stored sepearately from color in firmware.
 
 >	mod : set strip display mode.  Valid values are:
 
@@ -92,13 +92,13 @@ There is no space between the command-name and value(s).  All commands require a
 >		10. fade two colors
 >		11. fade three colors
 >		12. two alternating colors
->		13. terawatt alternating colors
+>		13. terawatt industries alternating colors
 >		14. three alternating colors
 >		15. two random alternating colors
 >		20. rainbow
->		21.rainbow cycle
->		22.random candy
->		30.cylon
+>		21. rainbow cycle
+>		22. random candy
+>		30. cylon
 
 >	mht : Set multi-color-hold-time.  The multi-color-hold-time determines how long each color is displayed before the transition to the next color.  Valid values are [0-65535] (16-bit integer).
 
@@ -108,12 +108,14 @@ There is no space between the command-name and value(s).  All commands require a
 
 #### Example Commands
 * idx;0
+* mht;5000
 * mod;1
+* mod;2
 * col;0,255
 * col;1,127
 * col;2,64
+* lfm;1
 * mod;22
-* mht;5000
 
 # Hardware
 Setting up a circuit with some LEDs isn't too difficult.  If you've never setup a LED circuit from scratch then checkout the fun products at Adafruit and Sparkfun for help.  If time permits an example circuit diagram and sketch configuration will be provided.
