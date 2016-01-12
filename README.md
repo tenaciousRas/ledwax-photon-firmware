@@ -55,7 +55,9 @@ If the displayMode parameter is set to a "family 2" mode, then the multiColorHol
 Understanding the above concepts will allow for basic control using raw commands.  There are more commands and variables for finer control and customization.
 
 # LEDWax IoT REST API
-##Variables
+LEDWax-Photon is built for the Photon so REST API [variables](https://docs.particle.io/reference/api/#get-a-variable-value "particle variables") and [functions](https://docs.particle.io/reference/api/#call-a-function "particle functions") are accessed through the Particle Cloud.
+
+##[Variables](https://docs.particle.io/reference/api/#get-a-variable-value "particle variables")
 The folowing particle cloud variables are exposed:
 * "numStrips": "int32" - number of LED strips configured in firmware
 * "stripIndex": "int32" - current strip being controlled 
@@ -68,7 +70,7 @@ The folowing particle cloud variables are exposed:
 * "fadeTime": "int32" - time spent on color transitions of (current) strip
 * "colorTime": "int32" - time spent displaying each color assigned to color mode
 
-##Functions
+##[Functions](https://docs.particle.io/reference/api/#call-a-function "particle functions")
 LEDWAX Photon exposes the following particle cloud functions:
 * setLEDParams(String command) : send command to LED strip
 * resetAll(String command) : reset all LED strips
