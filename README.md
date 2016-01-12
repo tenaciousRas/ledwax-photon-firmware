@@ -8,10 +8,11 @@ An IoT LED controller for Particle Photon with support for PWM LEDs and WS28xx L
 * Set LED colors.  Millions of choices.
 * Set LED brightness.  255 choices.
 * Many display modes for single and multi-pixel LED strips.
+* Remembers previous settings when powered-up.
 * Set color hold time interval.
 * Set color fade time interval.
 * Native color fading.
-* IoT Enabled.
+* IoT Enabled - REST API for control.
 * Supports Particle Photon.
 * Support for single-color PWM LED strips.
 * Support for multi-color (RGB+, PWM) LED strips.
@@ -75,12 +76,13 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 "command-name" can be one of the following:
 >	qry : TBD
 
->	idx : set stripIndex - the current strip being controlled. All following commands will be executed against this LED strip.  Min value is 0, max value is NUM_STRIPS - 1.  Default is 0.
+>	idx : set stripIndex - the current strip being controlled.  All following commands will be executed against this LED strip.  Valid values are 0 - (NUM_STRIPS - 1).  Default is 0.
 
 >	col : set modeColor - the LED pixel color.  cmd-value must ahere to the following format:
 
->		[mode-color-index],[decimal-value-0-to-255]
+>		[mode-color-index],[24-bit-integer]
 >	where mode-color-index is the index of the mode color (family 1 display mode) to set
+>	valid color values are 0 - 16777215 (24-bit integer)
 
 >	brt : set brightness - the strip brightness. Valid values are from 0 (0% = full off) to 255 (100% = full on).  Brightness is stored sepearately from color in firmware.
 
@@ -102,9 +104,9 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 
 >	mht : Set holdTime - the multi-color-hold-time.  The multi-color-hold-time determines how long each color is displayed before the transition to the next color.  Valid values are 0 - 65535 (16-bit integer).
 
->	lfm : Set fadeMode - the led-fade-mode.  The led-fade-mode is the style of transition between colors, and only applies to certain display modes.  A value of 0 enables the native-fade color transition, so colors 'fade' from one to next.  A value of 1 disables the native-fade transition, so that each pixel along the strip is switched from one color to next.  The transition time is defined by the ledFadeModeTimeInterval variable, and can be adjusted with the 'lfti' command.  This setting currently only applies to display modes 0 - 10.
+>	lfm : Set fadeMode - the led-fade-mode.  The led-fade-mode is the style of transition between colors, and only applies to certain display modes.  A value of 0 enables the native-fade color transition, which causes the color of the entire strip to smoothly transition from one color to the next.  A value of 1 disables the native-fade transition, which causes each pixel along the strip to switch from one color to next.  This setting currently only applies to display modes 0 - 10.  Valid values are 0, 1.  The time spent during transition is defined by the ledFadeModeTimeInterval variable, and can be adjusted with the 'lfti' command.
 
->	lfti : Set fadeTime - the led-fade-mode time-interval.  The LED-fade-mode time-interval is the duration of execution of the LED color transition.   
+>	lfti : Set fadeTime - the led-fade-mode time-interval.  The LED-fade-mode time-interval defines the duration of the LED color transition, in milliseconds.  Valid values are 0 - 65535 (16-bit integer) 
 
 #### Example Commands
 * idx;0
