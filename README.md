@@ -136,7 +136,7 @@ cd ledwax-photon
 ```
 
 ### Generate documentation
-This project uses Doxygen documentation generator (http://www.doxygen.org).
+This project uses Doxygen documentation generator (http://www.doxygen.org).  To view the source-code documentation you must first install DOxygen, then generate the docs.
 ```
 cd ledwax-photon
 doxygen ledwax_doxygen.config
