@@ -79,8 +79,8 @@ There is no space between the command-name and value(s).  All commands require a
 
 >	col : set LED pixel color.  Format:
 
->		[pixel-index],[decimal-value-0-to-255]
->	where pixel-index is 0 (red), 1 (green), 2 (blue)
+>		[mode-color-index],[decimal-value-0-to-255]
+>	where mode-color-index is the index of the mode color (family 1 display mode) to set
 
 >	brt : set strip brightness.  Brightness is stored sepearately from color in firmware.
 
