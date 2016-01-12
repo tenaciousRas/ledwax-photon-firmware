@@ -57,7 +57,7 @@ Understanding the above concepts will allow for basic control using raw commands
 # LEDWax IoT REST API
 LEDWax-Photon is built for the Photon so REST API [variables](https://docs.particle.io/reference/api/#get-a-variable-value "particle variables") and [functions](https://docs.particle.io/reference/api/#call-a-function "particle functions") are accessed through the Particle Cloud.
 
-##[Variables](https://docs.particle.io/reference/api/#get-a-variable-value "particle variables")
+## [Variables][particle-vars]
 The folowing particle cloud variables are exposed:
 * "numStrips": "int32" - number of LED strips configured in firmware
 * "stripIndex": "int32" - current strip being controlled 
@@ -70,7 +70,7 @@ The folowing particle cloud variables are exposed:
 * "fadeTime": "int32" - time spent on color transitions of (current) strip
 * "colorTime": "int32" - time spent displaying each color assigned to color mode
 
-##[Functions](https://docs.particle.io/reference/api/#call-a-function "particle functions")
+## [Functions][particle-funcs]
 LEDWAX Photon exposes the following particle cloud functions:
 * setLEDParams(String command) : send command to LED strip
 * resetAll(String command) : reset all LED strips
@@ -204,3 +204,6 @@ FastLED SPI library.
 Flashee EEPROM library.
 
 Based on the open-source ledstrip-home Arduino sketch (https://github.com/tenaciousRas/ledstrip-home/).
+
+[particle-funcs]: https://docs.particle.io/reference/api/#call-a-function "particle functions"
+[particle-vars]: https://docs.particle.io/reference/api/#get-a-variable-value "particle variables"
