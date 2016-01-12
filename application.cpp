@@ -55,6 +55,9 @@ uint8_t pinDefs[NUM_STRIPS][3] = { { 0, 1, 2 }, { A5 } };  // only PWM mapping u
 
 // function prototypes
 int setLEDParams(String);
+int resetAllStripsToDefault(String);
+void refreshParticleVars();
+
 // global vars
 int numStrips = NUM_STRIPS;     //particle var
 uint8_t *STRIP_TYPES = &stripTypes[0];
@@ -78,18 +81,10 @@ void setup() {
     // set particle functions
     Particle.function(
             "setLEDParams", &setLEDParams);
+    Particle.function(
+            "resetAll", &resetAllStripsToDefault);
     // set particle vars - copy from object to global state
-    numStrips = LedWax->numStrips;
-    remoteControlStripIndex = LedWax->remoteControlStripIndex;
-    stripType = LedWax->stripType[LedWax->remoteControlStripIndex];
-    dispMode = LedWax->stripState[LedWax->remoteControlStripIndex].dispMode;
-    ledFadeMode = LedWax->stripState[LedWax->remoteControlStripIndex].ledFadeMode;
-    LedWax->buildLedModeColorJSONArr(LedWax->remoteControlStripIndex);
-    memcpy(ledModeColor, LedWax->ledModeColorJSONArr, 620);
-    ledModeColorIndex = LedWax->stripState[LedWax->remoteControlStripIndex].ledModeColorIndex;
-    multiColorHoldTime = LedWax->stripState[LedWax->remoteControlStripIndex].multiColorHoldTime;
-    fadeTimeInterval = LedWax->stripState[LedWax->remoteControlStripIndex].fadeTimeInterval;
-    ledStripBrightness = (int) ((float) LedWax->stripState[LedWax->remoteControlStripIndex].ledStripBrightness * (float) 255.0);
+    refreshParticleVars();
     Particle.variable(
             "numStrips", &numStrips, INT);
     Particle.variable(
@@ -116,20 +111,31 @@ void setup() {
 
 void loop() {
     LedWax->renderStrips();
-    // refresh particle vars - from object to global state
+    refreshParticleVars();
+}
+
+/**
+ * Refresh particle vars.  Copy values from {this#LedWax} to global state.
+ */
+void refreshParticleVars() {
     numStrips = LedWax->numStrips;
     remoteControlStripIndex = LedWax->remoteControlStripIndex;
     stripType = LedWax->stripType[remoteControlStripIndex];
     dispMode = LedWax->stripState[remoteControlStripIndex].dispMode;
     ledFadeMode = LedWax->stripState[remoteControlStripIndex].ledFadeMode;
-    LedWax->buildLedModeColorJSONArr(LedWax->remoteControlStripIndex);
+    LedWax->buildLedModeColorJSONArr(
+            LedWax->remoteControlStripIndex);
     memcpy(ledModeColor, LedWax->ledModeColorJSONArr, 620);
     ledModeColorIndex = LedWax->stripState[remoteControlStripIndex].ledModeColorIndex;
     multiColorHoldTime = LedWax->stripState[remoteControlStripIndex].multiColorHoldTime;
     fadeTimeInterval = LedWax->stripState[remoteControlStripIndex].fadeTimeInterval;
-    ledStripBrightness = (int) ((float) LedWax->stripState[LedWax->remoteControlStripIndex].ledStripBrightness * (float) 255.0);
+    ledStripBrightness = (int) (((float) (LedWax->stripState[LedWax->remoteControlStripIndex].ledStripBrightness)
+            * (float) (255.0)));
 }
 
+/**
+ * Handler for setLedParams() Particle function.
+ */
 int setLEDParams(String command) {
     bool validCommand = true;
     string cmd = command.c_str();
@@ -186,10 +192,14 @@ int setLEDParams(String command) {
     }
     if (!validCommand) {
         return 1;
-    } else {
-//        Particle.publish(
-//                "ledStripDisplayState", stripStateJSON);
     }
     return 0;
 }
 
+/**
+ * Handler for setLedParams() Particle function.
+ */
+int resetAllStripsToDefault() {
+    LedWax->resetAllStripsToDefault();
+    return 0;
+}

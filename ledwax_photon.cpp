@@ -227,6 +227,14 @@ void LEDWaxPhoton::defaultStripState(uint8_t stripNum) {
     ;
 }
 
+void LEDWaxPhoton::resetAllStripsToDefault() {
+    this->flash->eraseAll();
+    for (int i = 0; i < numStrips; i++) {
+        this->defaultStripState(i);
+        saveStripState(&stripState[i]);
+    }
+}
+
 void LEDWaxPhoton::readStripState(led_strip_disp_state* ret) {
     uint16_t offset = eepromAddyStripState + sizeof(int); // store int at addy 0
     uint8_t bData;

@@ -71,7 +71,7 @@ namespace ledwax {
                         uint8_t), solidTwoColors(uint8_t), solidThreeColors(uint8_t), alternatingTwoColors(uint8_t),
                 alternatingTwoRandomColors(uint8_t), alternatingThreeColors(uint8_t), startFade(uint8_t), doFade(
                         uint8_t), randomCandy(uint8_t), rainbow(uint8_t, uint16_t), rainbowCycle(uint8_t, uint16_t),
-                colorWipe(uint8_t, uint8_t), renderPixels(uint8_t);
+                colorWipe(uint8_t, uint8_t), renderPixels(uint8_t), resetAllStripsToDefault();
         const char
         *buildStripStateJSON(),
         *buildLedModeColorJSONArr(int);

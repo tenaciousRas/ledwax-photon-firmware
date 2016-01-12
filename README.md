@@ -188,6 +188,8 @@ Atom is the secondary (unsupported) IDE:
 ####Credits
 Thanks to all the contributors who made this software possible.
 
-Adafruit (http://www.adafruit.com) for help with I2C and NeoPixel libraries.
+Adafruit (http://www.adafruit.com) for help with I2C library.
+FastLED SPI library.
+Flashee EEPROM library.
 
 Based on the open-source ledstrip-home Arduino sketch (https://github.com/tenaciousRas/ledstrip-home/).
