@@ -137,7 +137,10 @@ The code started out as standard C compiled against g++, but it's been refactore
 ```
 git clone https://github.com/tenaciousRas/ledwax-photon.git
 cd ledwax-photon
+git submodule init
+git submodule update
 ```
+NOTE:  The FastLED library is now a git submodule, hence the git submodule commands above.
 
 ### Generate documentation
 This project uses Doxygen documentation generator (http://www.doxygen.org).  To view the source-code documentation you must first install DOxygen, then generate the docs.
