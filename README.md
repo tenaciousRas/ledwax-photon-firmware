@@ -75,16 +75,16 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 "command-name" can be one of the following:
 >	qry : TBD
 
->	idx : set LED command index -- all following commands will be executed against this LED strip.  Min value is 0, max value is NUM_STRIPS - 1.  Default is 0.
+>	idx : set stripIndex - the current strip being controlled. All following commands will be executed against this LED strip.  Min value is 0, max value is NUM_STRIPS - 1.  Default is 0.
 
->	col : set LED pixel color.  cmd-value must ahere to the following format:
+>	col : set modeColor - the LED pixel color.  cmd-value must ahere to the following format:
 
 >		[mode-color-index],[decimal-value-0-to-255]
 >	where mode-color-index is the index of the mode color (family 1 display mode) to set
 
->	brt : set strip brightness. Valid values are from 0 (0% = full off) to 255 (100% = full on).  Brightness is stored sepearately from color in firmware.
+>	brt : set brightness - the strip brightness. Valid values are from 0 (0% = full off) to 255 (100% = full on).  Brightness is stored sepearately from color in firmware.
 
->	mod : set strip display mode.  Valid values are:
+>	mod : set dispMode - the strip display mode.  Valid values are:
 
 >		0. solid color (default)
 >		1. fade terawatt industries colors
@@ -100,11 +100,11 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 >		22. random candy
 >		30. cylon
 
->	mht : Set multi-color-hold-time.  The multi-color-hold-time determines how long each color is displayed before the transition to the next color.  Valid values are 0 - 65535 (16-bit integer).
+>	mht : Set holdTime - the multi-color-hold-time.  The multi-color-hold-time determines how long each color is displayed before the transition to the next color.  Valid values are 0 - 65535 (16-bit integer).
 
->	lfm : Set LED-fade-mode.  The LED-fade-mode is the style of transition for certain display modes.  A value of 0 disables the fade color transition, so colors switch immediately.  A value of 1 enables the fade transition.  This only applies to display modes 0 - 10.
+>	lfm : Set fadeMode - the led-fade-mode.  The led-fade-mode is the style of transition between colors, and only applies to certain display modes.  A value of 0 enables the native-fade color transition, so colors 'fade' from one to next.  A value of 1 disables the native-fade transition, so that each pixel along the strip is switched from one color to next.  The transition time is defined by the ledFadeModeTimeInterval variable, and can be adjusted with the 'lfti' command.  This setting currently only applies to display modes 0 - 10.
 
->	lfi : [TODO]
+>	lfti : Set fadeTime - the led-fade-mode time-interval.  The LED-fade-mode time-interval is the duration of execution of the LED color transition.   
 
 #### Example Commands
 * idx;0
