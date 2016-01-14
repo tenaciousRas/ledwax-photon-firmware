@@ -1,5 +1,6 @@
 #ifndef LEDWAX_H
 #define LEDWAX_H
+#include "application.h"
 #include "lib/spark-flashee-eeprom/flashee-eeprom.h"
 #include "lib/fastled/firmware/FastLED.h"
 #include "lib/Adafruit_PWMServoDriver/Adafruit_PWMServoDriver.h"
@@ -43,7 +44,7 @@ namespace ledwax {
 
     public:
 
-        LEDWaxPhoton(uint8_t, uint8_t*, uint8_t*, uint8_t*, uint8_t***);
+        LEDWaxPhoton(uint8_t, uint8_t*, uint8_t*, uint8_t*, uint8_t*);
         ~LEDWaxPhoton();
 
         typedef struct {
@@ -81,6 +82,7 @@ namespace ledwax {
                 setLedFadeTimeInterval(string), setMultiColorHoldTime(string), setLedFadeMode(string);
         uint32_t rgbColor(uint8_t, uint8_t, uint8_t), wheel(uint8_t);
 
+        uint8_t *stripPins;
     private:
         ledwaxutil::LEDWaxPhotonUtil ledwaxUtil;
 
@@ -89,7 +91,6 @@ namespace ledwax {
         // addressable strips, one for PWM.  Effectively define position of strips by populating specific members
         // of each array.
         // FIXME improve implementation
-        uint8_t **stripPins;
 
         uint32_t *multiColorNextColorTime;
         uint32_t **ledColor;
@@ -100,7 +101,7 @@ namespace ledwax {
         double ***ledFadeStep; // 3 for each RGB component
         uint8_t *rainbowStepIndex;
 
-        Flashee::FlashDevice* flash;
+        Flashee::FlashDevice *flash;
         int16_t eepromAddyStripState = 4;  // eeprom addy to store strip state
 
         bool hasPWMStrip = false;
