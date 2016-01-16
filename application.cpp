@@ -45,7 +45,7 @@ using namespace ledwax;
 // *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
 #define NUM_STRIPS 1
 uint8_t stripTypes[NUM_STRIPS] = { STRIP_TYPE_WS2811 };
-uint8_t numLeds[NUM_STRIPS] = { 60 };
+uint8_t numLeds[NUM_STRIPS] = { 55 };
 uint8_t numColorsPerPixel[NUM_STRIPS] = { 3 };
 // TODO unfortunately FASTLED seems to require static pin assignment
 uint8_t pinDefs[NUM_STRIPS][3] = { { A5, 0, 0 } };  // only PWM mapping used
@@ -57,7 +57,7 @@ int resetAllStripsToDefault(String);
 void refreshParticleVars();
 
 // global vars
-int numStrips = 0;     //particle var
+int numStrips = NUM_STRIPS;     //particle var
 uint8_t *STRIP_TYPES = &stripTypes[0];
 uint8_t *NUM_LEDS = &numLeds[0];
 uint8_t *NUM_COLORS_PER_PIXEL = &numColorsPerPixel[0];
@@ -119,7 +119,7 @@ void refreshParticleVars() {
 //        numStrips = *(STRIP_PINS + 3);
 //        numStrips = pinDefs[1][0];
 //        numStrips = *(*(pinDefs + 1) + 0);    // compiler knows array column width
-    numStrips = (int) LedWax->stripNumPixels[1];
+    numStrips = (int) LedWax->stripNumPixels[0];
     remoteControlStripIndex = LedWax->remoteControlStripIndex;
     stripType = LedWax->stripType[remoteControlStripIndex];
     dispMode = LedWax->stripState[remoteControlStripIndex].dispMode;

@@ -41,9 +41,9 @@
 
 #define NUM_LEDS_SPARKFUN_WS2801_1METER 32
 
-#define DEFAULT_MULTI_COLOR_HOLD_TIME 9000;  // time to hold colors when showing multiple colors
-#define DEFAULT_DISP_MODE 22;
-#define DEFAULT_LED_FADE_MODE 2;    // FIXME use FADE_MODE_*
+#define DEFAULT_MULTI_COLOR_HOLD_TIME 5000;  // time to hold colors when showing multiple colors
+#define DEFAULT_DISP_MODE 1;
+#define DEFAULT_LED_FADE_MODE FADE_MODE_COLOR_WIPE;
 #define INITIAL_MULTI_COLOR_ALT_STATE 0;
 #define DEFAULT_LED_STRIP_BRIGHTNESS 1.0;
 
