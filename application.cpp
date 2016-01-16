@@ -43,12 +43,12 @@ using namespace ledwax;
 
 // LED Strip setup
 // *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
-#define NUM_STRIPS 2
-uint8_t stripTypes[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2811 };
-uint8_t numLeds[NUM_STRIPS] = { 1, 60 };
-uint8_t numColorsPerPixel[NUM_STRIPS] = { NUM_PIXELS_PER_LED_PWM_RGB_STRIP, 3 };
+#define NUM_STRIPS 1
+uint8_t stripTypes[NUM_STRIPS] = { STRIP_TYPE_WS2811 };
+uint8_t numLeds[NUM_STRIPS] = { 60 };
+uint8_t numColorsPerPixel[NUM_STRIPS] = { 3 };
 // TODO unfortunately FASTLED seems to require static pin assignment
-uint8_t pinDefs[NUM_STRIPS][3] = { { 0, 1, 2 }, { A5, 0, 0 } };  // only PWM mapping used
+uint8_t pinDefs[NUM_STRIPS][3] = { { A5, 0, 0 } };  // only PWM mapping used
 // *********** END EDIT THIS SECTION ***********
 
 // function prototypes
@@ -57,7 +57,7 @@ int resetAllStripsToDefault(String);
 void refreshParticleVars();
 
 // global vars
-int numStrips = NUM_STRIPS;     //particle var
+int numStrips = 0;     //particle var
 uint8_t *STRIP_TYPES = &stripTypes[0];
 uint8_t *NUM_LEDS = &numLeds[0];
 uint8_t *NUM_COLORS_PER_PIXEL = &numColorsPerPixel[0];
@@ -114,11 +114,12 @@ void loop() {
  * Refresh particle vars.  Copy values from {this#LedWax} to global state.
  */
 void refreshParticleVars() {
-    numStrips = LedWax->numStrips;
-//        numStrips = *(LedWax->stripPins + (1 * 3 + 0) * sizeof(uint8_t));
+//    numStrips = LedWax->numStrips;
+//        numStrips = *((uint8_t *) LedWax->stripPins + (1 * 3 + 0));
 //        numStrips = *(STRIP_PINS + 3);
 //        numStrips = pinDefs[1][0];
-//        numStrips = *(*(pinDefs + 1) + 0);
+//        numStrips = *(*(pinDefs + 1) + 0);    // compiler knows array column width
+    numStrips = (int) LedWax->stripNumPixels[1];
     remoteControlStripIndex = LedWax->remoteControlStripIndex;
     stripType = LedWax->stripType[remoteControlStripIndex];
     dispMode = LedWax->stripState[remoteControlStripIndex].dispMode;

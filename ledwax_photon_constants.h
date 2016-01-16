@@ -28,10 +28,23 @@
 #define STRIP_TYPE_WS2812 3
 #define STRIP_TYPE_PWM  10
 
-#define MAX_NUM_MODE_COLORS 3
+#define MAX_NUM_MODE_COLORS 3   // set up to three colors per mode
+
+#define LED_FADE_STEPS 16;
+#define LED_FADE_STEP_DELAY_MS 10;  // microsecs between fade steps
+
+#define FADE_MODE_NATIVE_TRANSITION 0
+#define FADE_MODE_COLOR_WIPE 1
+
 #define NUM_PIXELS_PER_LED_PWM_WHITE_STRIP  1  // single color PWM
 #define NUM_PIXELS_PER_LED_PWM_RGB_STRIP  3  // RGB PWM
 
 #define NUM_LEDS_SPARKFUN_WS2801_1METER 32
+
+#define DEFAULT_MULTI_COLOR_HOLD_TIME 9000;  // time to hold colors when showing multiple colors
+#define DEFAULT_DISP_MODE 22;
+#define DEFAULT_LED_FADE_MODE 2;    // FIXME use FADE_MODE_*
+#define INITIAL_MULTI_COLOR_ALT_STATE 0;
+#define DEFAULT_LED_STRIP_BRIGHTNESS 1.0;
 
 #endif

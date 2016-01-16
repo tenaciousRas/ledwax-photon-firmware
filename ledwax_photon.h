@@ -12,7 +12,7 @@ using namespace std;
 
 #define _LWAX_PHOTON_VERSION 6  // it's probably more like v.100
 #define _LWAX_PHOTON_DEBUG_MODE 1   // comment out to disable
-// #define _LWAX_PHOTON_SERIAL_DEBUG_MODE 1   // comment out to disable
+// #define _LWAX_PHOTON_SERIAL_DEBUG_MODE 1   // comment to disable
 
 /**
  * display mode values:
@@ -25,20 +25,12 @@ using namespace std;
  * 13: terawatt alternating colors
  * 14: three alternating colors
  * 15: two random alternating colors
+ * 16: three random alternating colors
  * 20: rainbow
  * 21: rainbow cycle
  * 22: random candy
  * 30: cylon
  */
-#define DEFAULT_MULTI_COLOR_HOLD_TIME 5000;  // time to hold colors when showing multiple colors
-#define DEFAULT_DISP_MODE 20;
-#define DEFAULT_LED_FADE_MODE 2;
-#define INITIAL_MULTI_COLOR_ALT_STATE 0;
-#define DEFAULT_LED_STRIP_BRIGHTNESS 1.0;
-
-#define LED_FADE_STEPS 16;
-#define LED_FADE_STEP_DELAY_MS 50;  // microsecs between fade steps
-
 namespace ledwax {
     class LEDWaxPhoton {
 
@@ -68,8 +60,8 @@ namespace ledwax {
 
         // METHOD DECLARATIONS
         void begin(), renderStrips(), defaultStripState(uint8_t), readStripState(led_strip_disp_state*), saveStripState(
-                led_strip_disp_state*), setDispModeColors(uint8_t, int), refreshLEDs(uint8_t), turnOffLEDs(uint8_t),
-                white(uint8_t), solidMultiColor(uint8_t, int), alternatingMultiColor(uint8_t, int), solidOneColor(
+                led_strip_disp_state*), setDispModeColors(uint8_t, int), refreshLEDs(uint8_t), allLEDsOFF(uint8_t),
+                allLEDsWhite(uint8_t), solidMultiColor(uint8_t, int), alternatingMultiColor(uint8_t, int), solidOneColor(
                         uint8_t), solidTwoColors(uint8_t), solidThreeColors(uint8_t), alternatingTwoColors(uint8_t),
                 alternatingTwoRandomColors(uint8_t), alternatingThreeColors(uint8_t), startFade(uint8_t), doFade(
                         uint8_t), randomCandy(uint8_t), rainbow(uint8_t, uint16_t), rainbowCycle(uint8_t, uint16_t),
@@ -97,9 +89,11 @@ namespace ledwax {
         uint32_t **ledColorOld;
         uint32_t **ledColorFadeTo;
         uint32_t *ledFadeStepTime;  // time to next fade step
-        int16_t *ledFadeStepIndex; // color distance divided by LED_FADE_STEPS
-        double ***ledFadeStep; // 3 for each RGB component
-        uint8_t *rainbowStepIndex;
+        int16_t *ledFadeStepIndex;  // fade step
+        double **ledFadeStep;   // color distance divided by LED_FADE_STEPS
+        uint16_t numLEDFadeSteps = LED_FADE_STEPS
+        ;
+        uint16_t *rainbowStepIndex;
 
         Flashee::FlashDevice *flash;
         int16_t eepromAddyStripState = 4;  // eeprom addy to store strip state

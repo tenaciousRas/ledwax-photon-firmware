@@ -13,7 +13,7 @@ namespace ledwaxutil {
         bool startsWith(const char*, const char*),
                 isAddressableStrip(uint8_t stripNum);
         uint32_t rgbColor(uint8_t, uint8_t, uint8_t);
-        uint32_t wheel(uint8_t);
+        uint32_t wheel(uint16_t);
 
     private:
     };

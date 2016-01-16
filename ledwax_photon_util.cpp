@@ -54,7 +54,7 @@ uint32_t LEDWaxPhotonUtil::rgbColor(uint8_t r, uint8_t g, uint8_t b) {
  * Input a value 0 to 255 to get a color value.
  * The colours are a transition r - g -b - back to r
  */
-uint32_t LEDWaxPhotonUtil::wheel(uint8_t wheelPos) {
+uint32_t LEDWaxPhotonUtil::wheel(uint16_t wheelPos) {
     if (wheelPos < 85) {
         return rgbColor(
                 wheelPos * 3, 255 - wheelPos * 3, 0);
