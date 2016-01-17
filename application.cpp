@@ -41,7 +41,12 @@
 
 using namespace ledwax;
 
-// LED Strip setup
+// LED Strip setup.
+// Interesting C implementation.  Define two arrays, one for
+// addressable strips, one for PWM.  Effectively define position of strips and
+// corresponding features by populating specific members of each configuration
+// array.
+// FIXME improve implementation
 // *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
 #define NUM_STRIPS 1
 uint8_t stripTypes[NUM_STRIPS] = { STRIP_TYPE_WS2811 };

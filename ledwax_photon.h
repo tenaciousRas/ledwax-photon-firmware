@@ -4,6 +4,8 @@
 #include "lib/spark-flashee-eeprom/flashee-eeprom.h"
 #include "lib/fastled/firmware/FastLED.h"
 #include "lib/Adafruit_PWMServoDriver/Adafruit_PWMServoDriver.h"
+#include "lib/ledmatrix/LEDMatrix.h"
+#include "lib/ledsprites/LEDSprites.h"
 #include "ledwax_photon_util.h"
 #include "ledwax_photon_constants.h"
 
@@ -73,16 +75,13 @@ namespace ledwax {
                 setLedFadeTimeInterval(string), setMultiColorHoldTime(string), setLedFadeMode(string);
         uint32_t rgbColor(uint8_t, uint8_t, uint8_t), wheel(uint8_t);
 
-        uint8_t *stripPins;
     private:
         ledwaxutil::LEDWaxPhotonUtil ledwaxUtil;
 
-        CRGB **addressableStrips;
-        // Initialize strip variables.  Interesting C implementation.  Define two arrays, one for
-        // addressable strips, one for PWM.  Effectively define position of strips by populating specific members
-        // of each array.
-        // FIXME improve implementation
-
+        CLEDController **fastLEDControllers;
+        CRGB **addressableStripPixels;
+        cLEDMatrix **spritedLEDCanvas;
+        uint8_t *stripPins;
         uint32_t *multiColorNextColorTime;
         uint32_t **ledColor;
         uint32_t **ledColorOld;
@@ -99,6 +98,19 @@ namespace ledwax {
 
         bool hasPWMStrip = false;
         Adafruit_PWMServoDriver pwmDriver;
+
+        cLEDSprites **sprites;
+        cSprite **spriteShapes;
+        // TODO move to distinct include
+        const uint8_t ShapeData[5] = {
+          B8_1BIT(00100000),
+          B8_1BIT(01110000),
+          B8_1BIT(11111000),
+          B8_1BIT(01110000),
+          B8_1BIT(00100000),
+        };
+        struct CRGB spriteShapeColTable[1] = { CRGB(
+                64, 128, 255) };
     };
 }
 #endif
