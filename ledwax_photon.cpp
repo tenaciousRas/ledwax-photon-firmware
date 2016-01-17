@@ -827,15 +827,15 @@ void LEDWaxPhoton::randomCandy(uint8_t stripNum) {
 void LEDWaxPhoton::rainbow(uint8_t stripNum, uint16_t wait) {
     if (multiColorNextColorTime[stripNum] - millis() > wait) {
         int i = 0;
-        if (rainbowStepIndex[stripNum] > 256 * 3) {
+        if (rainbowStepIndex[stripNum] <= 0 ) {
             // 3 cycles of all 256 colors in the wheel
-            rainbowStepIndex[stripNum] = 0;
+            rainbowStepIndex[stripNum] = 256 * 3;
         }
         for (i = 0; i < stripNumPixels[stripNum]; i++) {
             ledColorFadeTo[stripNum][i] = ledwaxUtil.wheel(
                     (i + rainbowStepIndex[stripNum]) % 255);
         }
-        rainbowStepIndex[stripNum]++;
+        rainbowStepIndex[stripNum]--;
     }
 }
 
@@ -846,8 +846,8 @@ void LEDWaxPhoton::rainbow(uint8_t stripNum, uint16_t wait) {
 void LEDWaxPhoton::rainbowCycle(uint8_t stripNum, uint16_t wait) {
     if (multiColorNextColorTime[stripNum] - millis() > wait) {
         int i;
-        if (rainbowStepIndex[stripNum] > 256 * 5) {
-            rainbowStepIndex[stripNum] = 0;
+        if (rainbowStepIndex[stripNum] <= 0) {
+            rainbowStepIndex[stripNum] = 256 * 5;
         }
         for (i = 0; i < stripNumPixels[stripNum]; i++) {
             // Use each pixel as a fraction of the full 256-color wheel
@@ -857,7 +857,7 @@ void LEDWaxPhoton::rainbowCycle(uint8_t stripNum, uint16_t wait) {
             ledColorFadeTo[stripNum][i] = ledwaxUtil.wheel(
                     ((i * 256 / stripNumPixels[stripNum]) + rainbowStepIndex[stripNum]) % 255);
         }
-        rainbowStepIndex[stripNum]++;
+        rainbowStepIndex[stripNum]--;
     }
 }
 
