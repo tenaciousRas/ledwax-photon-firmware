@@ -328,6 +328,7 @@ void LEDWaxPhoton::saveStripState(led_strip_disp_state* lsds) {
 #ifdef _LWAX_PHOTON_SERIAL_DEBUG_MODE
     Serial.print(F("write eeprom done\n"));
 #endif
+    delete storedState;
 }
 
 /**
@@ -898,4 +899,5 @@ void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
             FastLED.show();
             break;
     }
+    delete ledColorFadeToChannels;
 }

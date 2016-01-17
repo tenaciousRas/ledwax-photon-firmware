@@ -45,7 +45,7 @@ using namespace ledwax;
 // *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
 #define NUM_STRIPS 1
 uint8_t stripTypes[NUM_STRIPS] = { STRIP_TYPE_WS2811 };
-uint8_t numLeds[NUM_STRIPS] = { 55 };
+uint8_t numLeds[NUM_STRIPS] = { 60 };
 uint8_t numColorsPerPixel[NUM_STRIPS] = { 3 };
 // TODO unfortunately FASTLED seems to require static pin assignment
 uint8_t pinDefs[NUM_STRIPS][3] = { { A5, 0, 0 } };  // only PWM mapping used
