@@ -1,3 +1,6 @@
 [submodule "FastLED"]
 	path = lib/fastled
 	url = https://github.com/focalintent/FastLED-Sparkcore
+[submodule "LEDSprites"]
+	path = lib/LEDSprites
+	url = https://github.com/AaronLiddiment/LEDSprites.git
