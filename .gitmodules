@@ -4,3 +4,6 @@
 [submodule "LEDSprites"]
 	path = lib/ledsprites
 	url = https://github.com/AaronLiddiment/LEDSprites.git
+[submodule "LEDMatrix"]
+	path = lib/ledmatrix
+	url = https://github.com/AaronLiddiment/LEDMatrix.git
