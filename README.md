@@ -5,18 +5,18 @@
 An IoT LED controller for Particle Photon with support for PWM LEDs and WS28xx LED Strips.
 
 ## Features
+* Control arrays of LED strips from a single Photon
 * Set LED colors.  Millions of choices.
 * Set LED brightness.  255 choices.
 * Many display modes for single and multi-pixel LED strips.
 * Remembers previous settings when powered-up.
-* Set color hold time interval.
-* Set color fade time interval.
 * Native color fading.
 * IoT Enabled - REST API for control.
 * Supports Particle Photon.
 * Support for single-color PWM LED strips.
 * Support for multi-color (RGB+, PWM) LED strips.
-* Support for WS28xx (SPI) Addressable LED strips.
+* Support for many types of (SPI) Addressable LED strips, such as WS2801, WS2811, and WS2812.
+* Non-blocking, time-sliced firmware.
 
 ## Setup
 
@@ -142,7 +142,14 @@ I've designed a custom PCB which is undergoing testing so this can be assembled 
 # Develop & Contribute
 LEDWax-Photon is a C/C++ project targeted at ARM GNU EABI cross-tools compiling, specifically for the Photon/STM platform.  To compile this software from scratch you need a cross-compiler toolchain, such as the ones found at https://launchpad.net/gcc-arm-embedded/.
 
-The code started out as standard C compiled against g++, but it's been refactored for c++.  There are multiple branches.  The "master" branch is considered stable, but it's currently just a stub.  As of the version 0.1, no branch is considered stable.
+The "master" branch shall be considered stable, but it's currently just a stub.  As of version 0.2, no branch is considered stable.  Version 0.2 is the latest as of 01/2016.
+
+## Architectural Concepts
+The LEDWax-Phton firmware is built with a custom temporal multi-threading model.  There should never be a need to use delay().  Instead of delay's, new features should rely on state-machines that have the same effect.  There are currently two state machines.  They can be re-used for new features, or new state machines can be added.
+
+The second major concept utilized by LEDWax is to prefer runtime over compile-time configuration.  This has a major impact on design decisions and runtime performance risks.  For example it impacts decisions such as:  special attention must be taken to manage memory, hardcoded variable sizes and arrays are usually unacceptable, use of C++ Class templates is often incompatible with runtime configuration.
+
+With that said, if you wish to contribute a pull request, please adopt the above principles or improve upon them.
 
 ## Getting started
 ```
@@ -202,6 +209,8 @@ Thanks to all the contributors who made this software possible.
 Adafruit (http://www.adafruit.com) for help with I2C library.
 FastLED SPI library.
 Flashee EEPROM library.
+
+Thanks to Sparkfun, Inc. for open source firmware and PCBs.
 
 Based on the open-source ledstrip-home Arduino sketch (https://github.com/tenaciousRas/ledstrip-home/).
 
