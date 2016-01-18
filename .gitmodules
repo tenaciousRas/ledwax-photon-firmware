@@ -3,7 +3,7 @@
 	url = https://github.com/focalintent/FastLED-Sparkcore
 [submodule "LEDSprites"]
 	path = lib/ledsprites
-	url = https://github.com/AaronLiddiment/LEDSprites.git
+	url = https://github.com/tenaciousRas/LEDSprites.git
 [submodule "LEDMatrix"]
 	path = lib/ledmatrix
-	url = https://github.com/AaronLiddiment/LEDMatrix.git
+	url = https://github.com/tenaciousRas/LEDMatrix.git
