@@ -119,12 +119,14 @@ void loop() {
  * Refresh particle vars.  Copy values from {this#LedWax} to global state.
  */
 void refreshParticleVars() {
-//    numStrips = LedWax->numStrips;
-//        numStrips = *((uint8_t *) LedWax->stripPins + (1 * 3 + 0));
-//        numStrips = *(STRIP_PINS + 3);
-//        numStrips = pinDefs[1][0];
-//        numStrips = *(*(pinDefs + 1) + 0);    // compiler knows array column width
-    numStrips = (int) LedWax->stripNumPixels[0];
+    numStrips = LedWax->numStrips;
+#ifdef __LWAX_PHOTON_DEBUG_MODE
+//    numStrips = *((uint8_t *) LedWax->stripPins + (1 * 3 + 0));
+//    numStrips = *(STRIP_PINS + 3);
+//    numStrips = pinDefs[1][0];
+//    numStrips = *(*(pinDefs + 1) + 0);    // compiler knows array column width
+//    numStrips = (int) LedWax->stripNumPixels[0];
+#endif
     remoteControlStripIndex = LedWax->remoteControlStripIndex;
     stripType = LedWax->stripType[remoteControlStripIndex];
     dispMode = LedWax->stripState[remoteControlStripIndex].dispMode;

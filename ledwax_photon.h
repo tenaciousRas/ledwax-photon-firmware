@@ -6,13 +6,14 @@
 #include "lib/Adafruit_PWMServoDriver/Adafruit_PWMServoDriver.h"
 #include "lib/ledmatrix/LEDMatrix.h"
 #include "lib/ledsprites/LEDSprites.h"
+#include "ledwax_photon_sprites.h"
 #include "ledwax_photon_util.h"
 #include "ledwax_photon_constants.h"
 
 FASTLED_USING_NAMESPACE
 using namespace std;
 
-#define _LWAX_PHOTON_VERSION 6  // it's probably more like v.100
+#define _LWAX_PHOTON_VERSION 7  // it's probably more like v.100
 #define _LWAX_PHOTON_DEBUG_MODE 1   // comment out to disable
 // #define _LWAX_PHOTON_SERIAL_DEBUG_MODE 1   // comment to disable
 
@@ -42,8 +43,7 @@ namespace ledwax {
         ~LEDWaxPhoton();
 
         typedef struct {
-            uint8_t dispMode;
-            bool fading;
+            uint8_t dispMode;bool fading;
             uint8_t ledFadeMode; // color fade mode, 0 for entire strip, 1 for swipe pixels
             uint8_t ledModeColorIndex;  // state of alternating colors
             uint32_t ledModeColor[MAX_NUM_MODE_COLORS];
@@ -62,14 +62,13 @@ namespace ledwax {
         // METHOD DECLARATIONS
         void begin(), renderStrips(), defaultStripState(uint8_t), readStripState(led_strip_disp_state*), saveStripState(
                 led_strip_disp_state*), setDispModeColors(uint8_t, int), refreshLEDs(uint8_t), allLEDsOFF(uint8_t),
-                allLEDsWhite(uint8_t), solidMultiColor(uint8_t, int), alternatingMultiColor(uint8_t, int), solidOneColor(
-                        uint8_t), solidTwoColors(uint8_t), solidThreeColors(uint8_t), alternatingTwoColors(uint8_t),
-                alternatingTwoRandomColors(uint8_t), alternatingThreeColors(uint8_t), startFade(uint8_t), doFade(
-                        uint8_t), randomCandy(uint8_t), rainbow(uint8_t, uint16_t), rainbowCycle(uint8_t, uint16_t),
-                colorWipe(uint8_t, uint8_t), renderPixels(uint8_t), resetAllStripsToDefault();
-        const char
-        *buildStripStateJSON(),
-        *buildLedModeColorJSONArr(int);
+                allLEDsWhite(uint8_t), solidMultiColor(uint8_t, int), alternatingMultiColor(uint8_t, int),
+                solidOneColor(uint8_t), solidTwoColors(uint8_t), solidThreeColors(uint8_t), alternatingTwoColors(
+                        uint8_t), alternatingTwoRandomColors(uint8_t), alternatingThreeColors(uint8_t), startFade(
+                        uint8_t), doFade(uint8_t), randomCandy(uint8_t), rainbow(uint8_t, uint16_t), rainbowCycle(
+                        uint8_t, uint16_t), colorWipe(uint8_t, uint8_t), renderPixels(uint8_t),
+                resetAllStripsToDefault(), setSpriteColors(int), initSprites(uint8_t);
+        const char *buildStripStateJSON(), *buildLedModeColorJSONArr(int);
         int16_t getNumStrips();
         int16_t setRemoteControlStripIndex(string), setModeLEDColor(string), setDispMode(string), setBright(string),
                 setLedFadeTimeInterval(string), setMultiColorHoldTime(string), setLedFadeMode(string);
@@ -83,6 +82,7 @@ namespace ledwax {
         cLEDMatrix **spritedLEDCanvas;
         uint8_t *stripPins;
         uint32_t *multiColorNextColorTime;
+        // FIXME refactor for CRGB
         uint32_t **ledColor;
         uint32_t **ledColorOld;
         uint32_t **ledColorFadeTo;
@@ -100,17 +100,8 @@ namespace ledwax {
         Adafruit_PWMServoDriver pwmDriver;
 
         cLEDSprites **sprites;
-        cSprite **spriteShapes;
-        // TODO move to distinct include
-        const uint8_t ShapeData[5] = {
-          B8_1BIT(00100000),
-          B8_1BIT(01110000),
-          B8_1BIT(11111000),
-          B8_1BIT(01110000),
-          B8_1BIT(00100000),
-        };
-        struct CRGB spriteShapeColTable[1] = { CRGB(
-                64, 128, 255) };
+        cSprite ***spriteShapes;
+        CRGB ***spriteShapesColorTables;
     };
 }
 #endif

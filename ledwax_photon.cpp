@@ -36,17 +36,14 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numStrips, uint8_t *stripType, uint8_t *strip
     this->addressableStripPixels = new CRGB*[numStrips];
     this->spritedLEDCanvas = new cLEDMatrix*[numStrips];
     this->sprites = new cLEDSprites*[numStrips];
-    this->spriteShapes = new cSprite*[numStrips];
+    this->spriteShapes = new cSprite**[numStrips];
+    this->spriteShapesColorTables = new CRGB**[numStrips];
     for (int i = 0; i < numStrips; i++) {
         this->ledColor[i] = new uint32_t[this->stripNumPixels[i]];
         this->ledColorOld[i] = new uint32_t[this->stripNumPixels[i]];
         this->ledColorFadeTo[i] = new uint32_t[this->stripNumPixels[i]];
         this->ledFadeStep[i] = new double[this->stripNumPixels[i] * 3];
         this->addressableStripPixels[i] = new CRGB[this->stripNumPixels[i]];
-        this->spritedLEDCanvas[i] = new cLEDMatrix(
-                HORIZONTAL_MATRIX, (int) this->stripNumPixels[i], 1);
-        this->spritedLEDCanvas[i]->SetLEDArray(
-                addressableStripPixels[i]);
         if (ledwaxUtil.isAddressableStrip(
                 this->stripType[i])) {
             // FIXME we only have one (static) FastLEDController!
@@ -65,9 +62,19 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numStrips, uint8_t *stripType, uint8_t *strip
                             addressableStripPixels[i], (int) this->stripNumPixels[i]);
                     break;
             }
+            this->spritedLEDCanvas[i] = new cLEDMatrix(
+                    HORIZONTAL_MATRIX, (int) this->stripNumPixels[i], 1);
+            this->spritedLEDCanvas[i]->SetLEDArray(
+                    addressableStripPixels[i]);
+            this->sprites[i] = new cLEDSprites(
+                    this->spritedLEDCanvas[i]);
+            this->spriteShapes[i] = new cSprite*[1];
+            this->spriteShapesColorTables[i] = new CRGB*[1];
         } else {
             hasPWMStrip = true;
             addressableStripPixels[i] = NULL;
+            this->spritedLEDCanvas[i] = NULL;
+            this->spriteShapes[i] = NULL;
         }
     }
     if (hasPWMStrip) {
@@ -118,12 +125,8 @@ void LEDWaxPhoton::begin() {
                 &stripState[i]);
 #endif
         // setup Sprites
-        this->sprites[i] = new cLEDSprites(
-                this->spritedLEDCanvas[i]);
-        this->spriteShapes[i] = new cSprite(
-                5, 5, ShapeData, 1, _1BIT, spriteShapeColTable, ShapeData);
-        this->sprites[i]->AddSprite(
-                spriteShapes[i]);
+        initSprites(
+                i);
         // setup LEDs
         setDispModeColors(
                 i, stripState[i].dispMode);
@@ -141,11 +144,19 @@ void LEDWaxPhoton::begin() {
 
 void LEDWaxPhoton::renderStrips() {
     for (int i = 0; i < numStrips; i++) {
-        if (stripState[i].fading) {
-            doFade(i);
-            renderPixels(
-                    i);
-            continue;
+        switch (stripState[i].dispMode) {
+            case 30:
+                // hack so we don't fade
+                // sprites operate directly on CRGB structure
+                break;
+            default:
+                if (stripState[i].fading) {
+                    doFade(i);
+                    renderPixels(
+                            i);
+                    continue;
+                }
+                break;
         }
         switch (stripState[i].dispMode) {
             case 0:
@@ -196,19 +207,27 @@ void LEDWaxPhoton::renderStrips() {
                         i);
                 break;
             case 30:
-                this->spriteShapes[i]->SetPositionFrameMotionOptions(
-                        0/*X*/, 0/*Y*/, 0/*Frame*/, 0/*FrameRate*/, +1/*XChange*/, 1/*XRate*/, +1/*YChange*/,
-                        1/*YRate*/, SPRITE_DETECT_EDGE | SPRITE_X_KEEPIN | SPRITE_Y_KEEPIN);
-                renderPixels(
-                        i);
+                // TODO extract method
+                if (ledFadeStepTime[i] - millis() > stripState[i].fadeTimeInterval) {
+                    ledFadeStepTime[i] = (uint32_t) millis() + stripState[i].fadeTimeInterval;
+                    renderPixels(
+                            i);
+                }
                 break;
             default:
                 break;
         }
-        if (multiColorNextColorTime[i] - millis() > stripState[i].multiColorHoldTime) {
-            multiColorNextColorTime[i] = millis() + stripState[i].multiColorHoldTime;
-            startFade(
-                    (uint8_t) i);
+        switch (stripState[i].dispMode) {
+            case 30:
+                // hack so we don't fade
+                break;
+            default:
+                if (multiColorNextColorTime[i] - millis() > stripState[i].multiColorHoldTime) {
+                    multiColorNextColorTime[i] = millis() + stripState[i].multiColorHoldTime;
+                    startFade(
+                            (uint8_t) i);
+                }
+                break;
         }
     }
 }
@@ -469,6 +488,11 @@ void LEDWaxPhoton::setDispModeColors(uint8_t stripNum, int mode) {
         case 22:
             break;
         case 30:
+            this->sprites[stripNum]->RemoveAllSprites();
+            this->sprites[stripNum]->AddSprite(
+                    this->spriteShapes[stripNum][0]);
+            setSpriteColors(
+                    stripNum);
             allLEDsOFF(
                     stripNum);
             break;
@@ -476,6 +500,32 @@ void LEDWaxPhoton::setDispModeColors(uint8_t stripNum, int mode) {
             // noop
             break;
     }
+}
+
+void LEDWaxPhoton::initSprites(uint8_t stripNum) {
+    this->spriteShapesColorTables[stripNum][0] = new CRGB[4];
+    setSpriteColors(stripNum);
+    this->spriteShapes[stripNum][0] = new cSprite(
+            8, 1, SHAPE_DATA_CYLON, 1, _2BIT, spriteShapesColorTables[stripNum][0], SHAPE_MASK_CYLON);
+    this->spriteShapes[stripNum][0]->SetPositionFrameMotionOptions(
+            0/*X*/, 0/*Y*/, 0/*Frame*/, 0/*FrameRate*/, +1/*XChange*/, 1/*XRate*/, +0/*YChange*/, 1/*YRate*/,
+            SPRITE_DETECT_EDGE | SPRITE_X_KEEPIN | SPRITE_Y_KEEPIN);
+}
+
+void LEDWaxPhoton::setSpriteColors(int stripNum) {
+    spriteShapesColorTables[stripNum][0][0].setColorCode(
+            stripState[stripNum].ledModeColor[0]);
+    spriteShapesColorTables[stripNum][0][1].setColorCode(
+            stripState[stripNum].ledModeColor[0]);
+    spriteShapesColorTables[stripNum][0][2].setColorCode(
+            stripState[stripNum].ledModeColor[0]);
+    spriteShapesColorTables[stripNum][0][3] = NULL;
+    spriteShapesColorTables[stripNum][0][0].fadeToBlackBy(
+            255 - (uint8_t) (stripState[stripNum].ledStripBrightness * 255));
+    spriteShapesColorTables[stripNum][0][1].fadeToBlackBy(
+            255 - (uint8_t) (stripState[stripNum].ledStripBrightness * 143));
+    spriteShapesColorTables[stripNum][0][2].fadeToBlackBy(
+            255 - (uint8_t) (stripState[stripNum].ledStripBrightness * 48));
 }
 
 /**
@@ -522,6 +572,8 @@ int16_t LEDWaxPhoton::setModeLEDColor(string command) {
     stripState[remoteControlStripIndex].ledModeColor[colorIndex] = color;
     saveStripState(
             &stripState[remoteControlStripIndex]);
+    setSpriteColors(
+            remoteControlStripIndex);
 #ifdef _LWAX_PHOTON_SERIAL_DEBUG_MODE
     Serial.print(F("colorIndex = "));
     Serial.print(colorIndex);
@@ -574,6 +626,8 @@ int16_t LEDWaxPhoton::setBright(string command) {
     stripState[remoteControlStripIndex].ledStripBrightness = (float) bData / (float) 255.0;
     saveStripState(
             &stripState[remoteControlStripIndex]);
+    setSpriteColors(
+            remoteControlStripIndex);
 #ifdef _LWAX_PHOTON_SERIAL_DEBUG_MODE
     Serial.print(F("ledStripBrightness = "));
     Serial.print(bData);
@@ -639,6 +693,14 @@ void LEDWaxPhoton::allLEDsOFF(uint8_t stripNum) {
     for (int i = 0; i < stripNumPixels[stripNum]; i++) {
         ledColor[stripNum][i] = OFF;
         ledColorFadeTo[stripNum][i] = OFF;
+        switch (stripState[stripNum].dispMode) {
+            case 30:
+                addressableStripPixels[stripNum][i].setColorCode(
+                        0);
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -906,6 +968,7 @@ void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
         default:
             switch (stripState[stripNum].dispMode) {
                 case 30:
+                    FastLED.clear();
                     sprites[stripNum]->UpdateSprites();
                     sprites[stripNum]->RenderSprites();
                     break;
