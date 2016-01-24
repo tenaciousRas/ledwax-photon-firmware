@@ -583,7 +583,7 @@ void LEDWaxPhoton::initDotSprite(uint8_t stripNum) {
     this->spriteShapesColorTables[stripNum][1] = new CRGB[4];
     this->spriteShapes[stripNum][1] = new cSprite(
             8, 1, SHAPE_DATA_DOT, 1, _2BIT, spriteShapesColorTables[stripNum][1], SHAPE_MASK_DOT);
-    this->spriteShapes[stripNum][0]->SetPositionFrameMotionOptions(
+    this->spriteShapes[stripNum][1]->SetPositionFrameMotionOptions(
             0/*X*/, 0/*Y*/, 0/*Frame*/, 0/*FrameRate*/, +1/*XChange*/, 1/*XRate*/, +0/*YChange*/, 1/*YRate*/,
             SPRITE_DETECT_EDGE | SPRITE_X_KEEPIN | SPRITE_Y_KEEPIN);
 }
@@ -681,7 +681,7 @@ int16_t LEDWaxPhoton::setDispMode(string command) {
     bData = max(
             bData, 0);
     bData = min(
-            bData, 30);
+            bData, 31);
     stripState[remoteControlStripIndex].dispMode = bData;
     setDispModeColors(
             remoteControlStripIndex, stripState[remoteControlStripIndex].dispMode);
