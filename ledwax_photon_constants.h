@@ -26,7 +26,12 @@
 #define STRIP_TYPE_WS2801 1
 #define STRIP_TYPE_WS2811 2
 #define STRIP_TYPE_WS2812 3
-#define STRIP_TYPE_PWM  10
+#define STRIP_TYPE_I2C_PWM  10
+
+#define WIRE_NUM_SPI_1_WIRE 1
+#define WIRE_NUM_SPI_2_WIRE 2
+#define WIRE_NUM_SPI_3_WIRE 3
+#define WIRE_NUM_SPI_4_WIRE 4
 
 #define MAX_NUM_MODE_COLORS 3   // set up to three colors per mode
 

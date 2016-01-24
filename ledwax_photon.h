@@ -9,6 +9,7 @@
 #include "ledwax_photon_sprites.h"
 #include "ledwax_photon_util.h"
 #include "ledwax_photon_constants.h"
+#include "ledwax_photon_config.h"
 
 FASTLED_USING_NAMESPACE
 using namespace std;
@@ -39,7 +40,7 @@ namespace ledwax {
 
     public:
 
-        LEDWaxPhoton(uint8_t, uint8_t*, uint8_t*, uint8_t*, uint8_t*);
+        LEDWaxPhoton(uint8_t, ledwaxconfig::LEDWaxConfig *stripConfigs);
         ~LEDWaxPhoton();
 
         typedef struct {
@@ -50,13 +51,31 @@ namespace ledwax {
             uint32_t multiColorHoldTime;
             uint32_t fadeTimeInterval;
             float ledStripBrightness;
+            uint16_t ledStripBrightnessScale;
+            void setLedStripBrightness(float bright) {
+                bright = max(bright, 0.0);
+                bright = min(bright, 1.0);
+                ledStripBrightness = bright;
+                ledStripBrightnessScale = (uint16_t) ledStripBrightness * 1024;
+            };
+            void setLedStripBrightness(uint16_t bright) {
+                bright = max(bright, 0);
+                bright = min(bright, 255);
+                ledStripBrightnessScale = bright;
+                ledStripBrightness = (float) ledStripBrightnessScale / (float) 1024;
+            };
+            uint8_t getLedStripBrightness8Bit() {
+                return (uint8_t) (ledStripBrightnessScale >> 2);
+            }
         } led_strip_disp_state;
 
+        ledwaxconfig::LEDWaxConfig *stripConfigs;
         led_strip_disp_state *stripState;
         char *ledModeColorJSONArr;    // ugh - stored for particle var
         int16_t numStrips = 0;
         int16_t totalNumAddressablePixels = 0;
-        uint8_t *stripType, *stripNumPixels, *stripNumColorsPerPixel;
+//        uint8_t *stripType, *stripNumPixels, *stripNumColorsPerPixel;
+//        uint8_t *stripPins;
         uint8_t remoteControlStripIndex = 0;
 
         // METHOD DECLARATIONS
@@ -77,31 +96,30 @@ namespace ledwax {
     private:
         ledwaxutil::LEDWaxPhotonUtil ledwaxUtil;
 
-        CLEDController **fastLEDControllers;
-        CRGB **addressableStripPixels;
-        cLEDMatrix **spritedLEDCanvas;
-        uint8_t *stripPins;
-        uint32_t *multiColorNextColorTime;
+        CLEDController** fastLEDControllers;
+        CRGB** addressableStripPixels;
+        cLEDMatrix** spritedLEDCanvas;
+        uint32_t* multiColorNextColorTime;
         // FIXME refactor for CRGB
-        uint32_t **ledColor;
-        uint32_t **ledColorOld;
-        uint32_t **ledColorFadeTo;
-        uint32_t *ledFadeStepTime;  // time to next fade step
-        int16_t *ledFadeStepIndex;  // fade step
-        double **ledFadeStep;   // color distance divided by LED_FADE_STEPS
+        uint32_t** ledColor;
+        uint32_t** ledColorOld;
+        uint32_t** ledColorFadeTo;
+        uint32_t* ledFadeStepTime;  // time to next fade step
+        int16_t* ledFadeStepIndex;  // fade step
+        double** ledFadeStep;   // color distance divided by LED_FADE_STEPS
         uint16_t numLEDFadeSteps = LED_FADE_STEPS
         ;
-        uint16_t *rainbowStepIndex;
+        uint16_t* rainbowStepIndex;
 
-        Flashee::FlashDevice *flash;
+        Flashee::FlashDevice* flash;
         int16_t eepromAddyStripState = 4;  // eeprom addy to store strip state
 
         bool hasPWMStrip = false;
         Adafruit_PWMServoDriver pwmDriver;
 
-        cLEDSprites **sprites;
-        cSprite ***spriteShapes;
-        CRGB ***spriteShapesColorTables;
+        cLEDSprites** sprites;
+        cSprite*** spriteShapes;
+        CRGB*** spriteShapesColorTables;
     };
 }
 #endif

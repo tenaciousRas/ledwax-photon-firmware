@@ -30,7 +30,7 @@ bool LEDWaxPhotonUtil::isAddressableStrip(uint8_t stripType) {
         case STRIP_TYPE_WS2812:
             ret = true;
             break;
-        case STRIP_TYPE_PWM:
+        case STRIP_TYPE_I2C_PWM:
         default:
             ret = false;
     }
