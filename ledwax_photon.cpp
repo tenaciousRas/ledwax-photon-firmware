@@ -972,7 +972,7 @@ void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
                     ledColorFadeToChannels[j] = (uint16_t) ((float) ((ledColor[stripNum][i] >> (8 * j)) & 0xFF)
                             * brightness);
                     pwmDriver.setPin(
-                            stripConfigs[stripNum].i2cPins[j], ledColorFadeToChannels[j], false);
+                            stripConfigs[stripNum].i2cPWMPins[j], ledColorFadeToChannels[j], false);
                 }
             }
             break;
