@@ -55,22 +55,23 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips();
 static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
     static ledwaxconfig::LEDWaxConfig* config = new ledwaxconfig::LEDWaxConfig[NUM_STRIPS];
     // *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
-    config[0].stripType = STRIP_TYPE_WS2811;
-    config[0].numPixels = 60;
-    config[0].numColorsPerPixel = 3;
-    config[0].spiPins = new uint8_t[WIRE_NUM_SPI_1_WIRE];
-    config[0].spiPins[0] = A5;
-    config[0].matrix = true;
-    config[0].matrixHeight = 3;
-    config[0].matrixWidth = 20;
+    config[0].setStripType(STRIP_TYPE_WS2811);
+    config[0].setNumPixels(60);
+    config[0].setNumColorsPerPixel(3);
+    config[0].setSpiPins(new uint8_t[WIRE_NUM_SPI_1_WIRE]);
+    config[0].getSpiPins()[0] = A5;
+    config[0].setMatrix(true);
+    config[0].setMatrixHeight(3);
 
-    config[1].stripType = STRIP_TYPE_I2C_PWM;
-    config[1].numPixels = 1;
-    config[1].numColorsPerPixel = NUM_PIXELS_PER_LED_PWM_RGB_STRIP;
-    config[1].i2cPWMPins = new uint8_t[NUM_PIXELS_PER_LED_PWM_RGB_STRIP];
-    config[1].i2cPWMPins[0] = 0;
-    config[1].i2cPWMPins[1] = 1;
-    config[1].i2cPWMPins[2] = 2;
+
+    config[1].setStripType(STRIP_TYPE_I2C_PWM);
+    config[1].setNumPixels(1);
+    config[1].setNumColorsPerPixel(NUM_PIXELS_PER_LED_PWM_RGB_STRIP);
+    config[1].setI2cPwmPins(new uint8_t[NUM_PIXELS_PER_LED_PWM_RGB_STRIP]);
+    config[1].getI2cPwmPins()[0] = 0;
+    config[1].getI2cPwmPins()[0] = 1;
+    config[1].getI2cPwmPins()[0] = 2;
+    config[1].setMatrix(false);
     // *********** END EDIT THIS SECTION ***********
     return config;
 }
@@ -139,7 +140,7 @@ void refreshParticleVars() {
 //    numStrips = (int) LedWax->stripNumPixels[0];
 #endif
     remoteControlStripIndex = LedWax->remoteControlStripIndex;
-    stripType = LedWax->stripConfigs[remoteControlStripIndex].stripType;
+    stripType = LedWax->stripConfigs[remoteControlStripIndex].getStripType();
     dispMode = LedWax->stripState[remoteControlStripIndex].dispMode;
     ledFadeMode = LedWax->stripState[remoteControlStripIndex].ledFadeMode;
     LedWax->buildLedModeColorJSONArr(

@@ -35,51 +35,85 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numStrips, ledwaxconfig::LEDWaxConfig *stripC
     this->spriteShapes = new cSprite**[numStrips];
     this->spriteShapesColorTables = new CRGB**[numStrips];
     this->fastLEDControllers = new CLEDController*[numStrips];
-    int numAddressableStrips = 0, addressableStripKey = 0;
+    uint16_t numFastLEDControllersDefd = 0, prevFastLEDControllerStripIndex = 0, fastLEDControllerLEDOffset = 0;
     for (int i = 0; i < numStrips; i++) {
-        switch (this->stripConfigs[i].stripType) {
-            case STRIP_TYPE_I2C_PWM:
-                break;
-            default:
-                this->totalNumAddressablePixels += this->stripConfigs[i].numPixels;
-        }
-    }
-    for (int i = 0; i < numStrips; i++) {
-        this->ledColor[i] = new uint32_t[this->stripConfigs[i].numPixels];
-        this->ledColorOld[i] = new uint32_t[this->stripConfigs[i].numPixels];
-        this->ledColorFadeTo[i] = new uint32_t[this->stripConfigs[i].numPixels];
-        this->ledFadeStep[i] = new double[this->stripConfigs[i].numPixels * 3];
-        this->addressableStripPixels[i] = new CRGB[this->stripConfigs[i].numPixels];
+        this->ledColor[i] = new uint32_t[this->stripConfigs[i].getNumPixels()];
+        this->ledColorOld[i] = new uint32_t[this->stripConfigs[i].getNumPixels()];
+        this->ledColorFadeTo[i] = new uint32_t[this->stripConfigs[i].getNumPixels()];
+        this->ledFadeStep[i] = new double[this->stripConfigs[i].getNumPixels() * 3];
+        this->addressableStripPixels[i] = new CRGB[this->stripConfigs[i].getNumPixels()];
         if (ledwaxUtil.isAddressableStrip(
-                this->stripConfigs[i].stripType)) {
-            switch (this->stripConfigs[i].stripType) {
+                this->stripConfigs[i].getStripType())) {
+            // smelly way to distinguish SPI ports
+            if (this->stripConfigs[prevFastLEDControllerStripIndex].getSpiPins()[0]
+                    != this->stripConfigs[i].getSpiPins()[0]) {
+                fastLEDControllerLEDOffset = 0;
+            }
+            switch (this->stripConfigs[i].getStripType()) {
                 case STRIP_TYPE_WS2801:
-//                    if (numAddressableStrips < 1) {
-                    fastLEDControllers[i] = &(FastLED.addLeds<WS2811_400, A5>(
-                            addressableStripPixels[i], (int) this->stripConfigs[i].numPixels));
-//                    } else {
-//                        FastLED.addLeds(&fastLEDControllers[0], addressableStripPixels[i], offset, nleds);
-//                    }
+                    if (fastLEDControllerLEDOffset < 1) {
+                        // TODO runtime pin configuration requires refactor of FastLED c'tor
+                        // C++ templates lock us into compile-time configuration
+                        if (numFastLEDControllersDefd == 0) {
+                            fastLEDControllers[i] = &(FastLED.addLeds<WS2811_400, A5>(
+                                    addressableStripPixels[i], (int) this->stripConfigs[i].getNumPixels()));
+                        } else if (numFastLEDControllersDefd == 1) {
+                            fastLEDControllers[i] = &(FastLED.addLeds<WS2811_400, A6>(
+                                    addressableStripPixels[i], (int) this->stripConfigs[i].getNumPixels()));
+                        }
+                        prevFastLEDControllerStripIndex = i;
+                        numFastLEDControllersDefd++;
+                    } else {
+                        FastLED.addLeds(
+                                fastLEDControllers[prevFastLEDControllerStripIndex], addressableStripPixels[i],
+                                fastLEDControllerLEDOffset, (int) this->stripConfigs[i].getNumPixels());
+                    }
                     break;
                 case STRIP_TYPE_WS2811:
-                    fastLEDControllers[i] = &(FastLED.addLeds<WS2811, A5>(
-                            addressableStripPixels[i], (int) this->stripConfigs[i].numPixels));
+                    if (fastLEDControllerLEDOffset < 1) {
+                        if (numFastLEDControllersDefd == 0) {
+                            fastLEDControllers[i] = &(FastLED.addLeds<WS2811, A5>(
+                                    addressableStripPixels[i], (int) this->stripConfigs[i].getNumPixels()));
+                        } else if (numFastLEDControllersDefd == 1) {
+                            fastLEDControllers[i] = &(FastLED.addLeds<WS2811, A6>(
+                                    addressableStripPixels[i], (int) this->stripConfigs[i].getNumPixels()));
+                        }
+                        prevFastLEDControllerStripIndex = i;
+                        numFastLEDControllersDefd++;
+                    } else {
+                        FastLED.addLeds(
+                                fastLEDControllers[prevFastLEDControllerStripIndex], addressableStripPixels[i],
+                                fastLEDControllerLEDOffset, (int) this->stripConfigs[i].getNumPixels());
+                    }
                     break;
                 case STRIP_TYPE_WS2812:
                 default:
-                    fastLEDControllers[i] = &(FastLED.addLeds<WS2812, A5>(
-                            addressableStripPixels[i], (int) this->stripConfigs[i].numPixels));
+                    if (fastLEDControllerLEDOffset < 1) {
+                        if (numFastLEDControllersDefd == 0) {
+                            fastLEDControllers[i] = &(FastLED.addLeds<WS2812, A5>(
+                                    addressableStripPixels[i], (int) this->stripConfigs[i].getNumPixels()));
+                        } else if (numFastLEDControllersDefd == 1) {
+                            fastLEDControllers[i] = &(FastLED.addLeds<WS2812, A6>(
+                                    addressableStripPixels[i], (int) this->stripConfigs[i].getNumPixels()));
+                        }
+                        prevFastLEDControllerStripIndex = i;
+                        numFastLEDControllersDefd++;
+                    } else {
+                        FastLED.addLeds(
+                                fastLEDControllers[prevFastLEDControllerStripIndex], addressableStripPixels[i],
+                                fastLEDControllerLEDOffset, (int) this->stripConfigs[i].getNumPixels());
+                    }
                     break;
             }
+            fastLEDControllerLEDOffset += (uint16_t) this->stripConfigs[i].getNumPixels();
             this->spritedLEDCanvas[i] = new cLEDMatrix(
-                    HORIZONTAL_MATRIX, (int) this->stripConfigs[i].numPixels, 1);
+                    HORIZONTAL_MATRIX, 30, 2);
             this->spritedLEDCanvas[i]->SetLEDArray(
                     addressableStripPixels[i]);
             this->sprites[i] = new cLEDSprites(
                     this->spritedLEDCanvas[i]);
-            this->spriteShapes[i] = new cSprite*[1];    // hardcoded 1 for cylon mode
-            this->spriteShapesColorTables[i] = new CRGB*[1];    // hardcoded 1 for cylon mode
-            numAddressableStrips++;
+            this->spriteShapes[i] = new cSprite*[2];    // hardcoded 2 for cylon, dot modes
+            this->spriteShapesColorTables[i] = new CRGB*[2];    // hardcoded 2 for cylon, dot modes
         } else {
             hasPWMStrip = true;
             fastLEDControllers[i] = NULL;
@@ -135,17 +169,15 @@ void LEDWaxPhoton::begin() {
         readStripState(
                 &stripState[i]);
 #endif
-        if (ledwaxUtil.isAddressableStrip(
-                stripConfigs[i].stripType)) {
-            // setup Sprites
-            initSprites(
-                    i);
-        }
         // setup LEDs
         setDispModeColors(
                 i, stripState[i].dispMode);
-        multiColorNextColorTime[i] = (uint32_t) millis() - (stripState[i].multiColorHoldTime << 2)
-                - (stripState[i].fadeTimeInterval * numLEDFadeSteps);
+        // setup Sprites
+        initSprites(
+                i);
+        // setup fading
+        multiColorNextColorTime[i] = getTimeToFadeNow(
+                i);
         startFade(
                 (uint8_t) i);
     }
@@ -221,6 +253,7 @@ void LEDWaxPhoton::renderStrips() {
                         i);
                 break;
             case 30:
+            case 31:
                 // TODO extract method
                 if (ledFadeStepTime[i] - millis() > stripState[i].fadeTimeInterval) {
                     ledFadeStepTime[i] = (uint32_t) millis() + stripState[i].fadeTimeInterval;
@@ -233,6 +266,7 @@ void LEDWaxPhoton::renderStrips() {
         }
         switch (stripState[i].dispMode) {
             case 30:
+            case 31:
                 // hack so we don't fade
                 break;
             default:
@@ -410,10 +444,10 @@ const char * LEDWaxPhoton::buildStripStateJSON() {
     ret += "{ ledStripDisplayState:[";
     for (int i = 0; i < numStrips; i++) {
         ret += "{";
-        itoa(this->stripConfigs[i].stripType, convBuf, 10);
+        itoa(this->stripConfigs[i].getStripType(), convBuf, 10);
         ret += "type:'" + (string) convBuf + "'";
         ret += ",";
-        itoa(this->stripConfigs[i].numPixels, convBuf, 10);
+        itoa(this->stripConfigs[i].getNumPixels(), convBuf, 10);
         ret += "pixNum:'" + (string) convBuf + "'";
         ret += ",";
         itoa(stripState[i].ledFadeMode, convBuf, 10);
@@ -423,10 +457,10 @@ const char * LEDWaxPhoton::buildStripStateJSON() {
         ret += "bright:'" + (string) convBuf + "'";
         ret += ",";
         ret += "modeColor:[";
-        for (int j = 0; j < this->stripConfigs[i].numColorsPerPixel; j++) {
+        for (int j = 0; j < this->stripConfigs[i].getNumColorsPerPixel(); j++) {
             itoa(stripState[i].ledModeColor[j], convBuf, 16);
             ret += (string) convBuf;
-            if (j < (this->stripConfigs[i].numColorsPerPixel - 1)) {
+            if (j < (this->stripConfigs[i].getNumColorsPerPixel() - 1)) {
                 ret += ",";
             }
         }
@@ -510,6 +544,15 @@ void LEDWaxPhoton::setDispModeColors(uint8_t stripNum, int mode) {
             allLEDsOFF(
                     stripNum);
             break;
+        case 31:
+            this->sprites[stripNum]->RemoveAllSprites();
+            this->sprites[stripNum]->AddSprite(
+                    this->spriteShapes[stripNum][1]);
+            setSpriteColors(
+                    stripNum);
+            allLEDsOFF(
+                    stripNum);
+            break;
         default:
             // noop
             break;
@@ -517,9 +560,18 @@ void LEDWaxPhoton::setDispModeColors(uint8_t stripNum, int mode) {
 }
 
 void LEDWaxPhoton::initSprites(uint8_t stripNum) {
-    this->spriteShapesColorTables[stripNum][0] = new CRGB[4];
-    setSpriteColors(
+    if (!ledwaxUtil.isAddressableStrip(
+            stripConfigs[stripNum].getStripType())) {
+        return;
+    }
+    initCylonSprite(
             stripNum);
+    initDotSprite(
+            stripNum);
+}
+
+void LEDWaxPhoton::initCylonSprite(uint8_t stripNum) {
+    this->spriteShapesColorTables[stripNum][0] = new CRGB[4];
     this->spriteShapes[stripNum][0] = new cSprite(
             8, 1, SHAPE_DATA_CYLON, 1, _2BIT, spriteShapesColorTables[stripNum][0], SHAPE_MASK_CYLON);
     this->spriteShapes[stripNum][0]->SetPositionFrameMotionOptions(
@@ -527,21 +579,37 @@ void LEDWaxPhoton::initSprites(uint8_t stripNum) {
             SPRITE_DETECT_EDGE | SPRITE_X_KEEPIN | SPRITE_Y_KEEPIN);
 }
 
+void LEDWaxPhoton::initDotSprite(uint8_t stripNum) {
+    this->spriteShapesColorTables[stripNum][1] = new CRGB[4];
+    this->spriteShapes[stripNum][1] = new cSprite(
+            8, 1, SHAPE_DATA_DOT, 1, _2BIT, spriteShapesColorTables[stripNum][1], SHAPE_MASK_DOT);
+    this->spriteShapes[stripNum][0]->SetPositionFrameMotionOptions(
+            0/*X*/, 0/*Y*/, 0/*Frame*/, 0/*FrameRate*/, +1/*XChange*/, 1/*XRate*/, +0/*YChange*/, 1/*YRate*/,
+            SPRITE_DETECT_EDGE | SPRITE_X_KEEPIN | SPRITE_Y_KEEPIN);
+}
+
 void LEDWaxPhoton::setSpriteColors(int stripNum) {
-    spriteShapesColorTables[stripNum][0][0].setColorCode(
-            stripState[stripNum].ledModeColor[0]);
-    spriteShapesColorTables[stripNum][0][1].setColorCode(
-            stripState[stripNum].ledModeColor[0]);
-    spriteShapesColorTables[stripNum][0][2].setColorCode(
-            stripState[stripNum].ledModeColor[0]);
-    spriteShapesColorTables[stripNum][0][3].setColorCode(
-            0);
-    spriteShapesColorTables[stripNum][0][0].fadeToBlackBy(
-            255 - (uint8_t) (stripState[stripNum].ledStripBrightnessScale >> 2));
-    spriteShapesColorTables[stripNum][0][1].fadeToBlackBy(
-            255 - (uint8_t) (stripState[stripNum].ledStripBrightnessScale >> 3));
-    spriteShapesColorTables[stripNum][0][2].fadeToBlackBy(
-            255 - (uint8_t) (stripState[stripNum].ledStripBrightnessScale >> 4));
+    if (!ledwaxUtil.isAddressableStrip(
+            stripConfigs[stripNum].getStripType())) {
+        return;
+    }
+    // loop over cylon and dot sprites
+    for (int i = 0; i < 2; i++) {
+        spriteShapesColorTables[stripNum][i][0].setColorCode(
+                stripState[stripNum].ledModeColor[0]);
+        spriteShapesColorTables[stripNum][i][1].setColorCode(
+                stripState[stripNum].ledModeColor[0]);
+        spriteShapesColorTables[stripNum][i][2].setColorCode(
+                stripState[stripNum].ledModeColor[0]);
+        spriteShapesColorTables[stripNum][i][3].setColorCode(
+                0);
+        spriteShapesColorTables[stripNum][i][0].fadeToBlackBy(
+                255 - (uint8_t) (stripState[stripNum].ledStripBrightnessScale >> 2));
+        spriteShapesColorTables[stripNum][i][1].fadeToBlackBy(
+                255 - (uint8_t) (stripState[stripNum].ledStripBrightnessScale >> 3));
+        spriteShapesColorTables[stripNum][i][2].fadeToBlackBy(
+                255 - (uint8_t) (stripState[stripNum].ledStripBrightnessScale >> 5));
+    }
 }
 
 /**
@@ -590,6 +658,9 @@ int16_t LEDWaxPhoton::setModeLEDColor(string command) {
             &stripState[remoteControlStripIndex]);
     setSpriteColors(
             remoteControlStripIndex);
+    multiColorNextColorTime[remoteControlStripIndex] = getTimeToFadeNow(
+            remoteControlStripIndex);
+    stripState[remoteControlStripIndex].fading = false;
 #ifdef _LWAX_PHOTON_SERIAL_DEBUG_MODE
     Serial.print(F("colorIndex = "));
     Serial.print(colorIndex);
@@ -616,11 +687,11 @@ int16_t LEDWaxPhoton::setDispMode(string command) {
             remoteControlStripIndex, stripState[remoteControlStripIndex].dispMode);
     stripState[remoteControlStripIndex].ledModeColorIndex = INITIAL_MULTI_COLOR_ALT_STATE
     ;
-    stripState[remoteControlStripIndex].fading = false;
     saveStripState(
             &stripState[remoteControlStripIndex]);
-    startFade(
+    multiColorNextColorTime[remoteControlStripIndex] = getTimeToFadeNow(
             remoteControlStripIndex);
+    stripState[remoteControlStripIndex].fading = false;
 #ifdef _LWAX_PHOTON_SERIAL_DEBUG_MODE
     Serial.print(F("dispMode = "));
     Serial.print((int) bData);
@@ -635,15 +706,16 @@ int16_t LEDWaxPhoton::setBright(string command) {
     int bData;
     bData = atoi(
             command.c_str());
-    bData = max(
-            bData, 0);
-    bData = min(
-            bData, 255);
-    stripState[remoteControlStripIndex].ledStripBrightness = (float) bData / (float) 255.0;
+    stripState[remoteControlStripIndex].setLedStripBrightness(
+            (uint16_t) bData);
     saveStripState(
             &stripState[remoteControlStripIndex]);
     setSpriteColors(
             remoteControlStripIndex);
+    if (!stripState[remoteControlStripIndex].fading) {
+        renderPixels(
+                remoteControlStripIndex);
+    }
 #ifdef _LWAX_PHOTON_SERIAL_DEBUG_MODE
     Serial.print(F("ledStripBrightness = "));
     Serial.print(bData);
@@ -679,6 +751,9 @@ int16_t LEDWaxPhoton::setMultiColorHoldTime(string command) {
     stripState[remoteControlStripIndex].multiColorHoldTime = bData;
     saveStripState(
             &stripState[remoteControlStripIndex]);
+    multiColorNextColorTime[remoteControlStripIndex] = getTimeToFadeNow(
+            remoteControlStripIndex);
+    stripState[remoteControlStripIndex].fading = false;
     return 0;
 }
 
@@ -706,11 +781,12 @@ int16_t LEDWaxPhoton::setLedFadeMode(string command) {
 }
 
 void LEDWaxPhoton::allLEDsOFF(uint8_t stripNum) {
-    for (int i = 0; i < this->stripConfigs[stripNum].numPixels; i++) {
+    for (int i = 0; i < this->stripConfigs[stripNum].getNumPixels(); i++) {
         ledColor[stripNum][i] = OFF;
         ledColorFadeTo[stripNum][i] = OFF;
         switch (stripState[stripNum].dispMode) {
             case 30:
+            case 31:
                 addressableStripPixels[stripNum][i].setColorCode(
                         0);
                 break;
@@ -721,7 +797,7 @@ void LEDWaxPhoton::allLEDsOFF(uint8_t stripNum) {
 }
 
 void LEDWaxPhoton::allLEDsWhite(uint8_t stripNum) {
-    for (int i = 0; i < this->stripConfigs[stripNum].numPixels; i++) {
+    for (int i = 0; i < this->stripConfigs[stripNum].getNumPixels(); i++) {
         ledColor[stripNum][i] = WHITE;
         ledColorFadeTo[stripNum][i] = OFF;
     }
@@ -729,7 +805,7 @@ void LEDWaxPhoton::allLEDsWhite(uint8_t stripNum) {
 
 void LEDWaxPhoton::solidMultiColor(uint8_t stripNum, int numMultiColors) {
     if (multiColorNextColorTime[stripNum] - millis() > stripState[stripNum].multiColorHoldTime) {
-        for (int x = this->stripConfigs[stripNum].numPixels - 1; x >= 0; x--) {
+        for (int x = this->stripConfigs[stripNum].getNumPixels() - 1; x >= 0; x--) {
             ledColorFadeTo[stripNum][x] = stripState[stripNum].ledModeColor[stripState[stripNum].ledModeColorIndex];
         }
 #ifdef _LWAX_PHOTON_SERIAL_DEBUG_MODE
@@ -748,7 +824,7 @@ void LEDWaxPhoton::solidMultiColor(uint8_t stripNum, int numMultiColors) {
 }
 
 void LEDWaxPhoton::alternatingMultiColor(uint8_t stripNum, int numMultiColors) {
-    for (int x = (this->stripConfigs[stripNum].numPixels - 1); x >= 0; x -= numMultiColors) {
+    for (int x = (this->stripConfigs[stripNum].getNumPixels() - 1); x >= 0; x -= numMultiColors) {
         for (int y = 0; y < numMultiColors; y++) {
             ledColorFadeTo[stripNum][x - y] = stripState[stripNum].ledModeColor[y];
         }
@@ -785,6 +861,11 @@ void LEDWaxPhoton::alternatingThreeColors(uint8_t stripNum) {
             stripNum, 3);
 }
 
+uint32_t LEDWaxPhoton::getTimeToFadeNow(uint8_t stripNum) {
+    return (uint32_t) millis() - (stripState[stripNum].multiColorHoldTime << 2)
+            - (stripState[stripNum].fadeTimeInterval * numLEDFadeSteps);
+}
+
 void LEDWaxPhoton::startFade(uint8_t stripNum) {
     stripState[stripNum].fading = true;
     long colorDist;
@@ -794,7 +875,7 @@ void LEDWaxPhoton::startFade(uint8_t stripNum) {
     switch (stripState[stripNum].ledFadeMode) {
         case FADE_MODE_NATIVE_TRANSITION:
             multiColorNextColorTime[stripNum] += (stripState[stripNum].fadeTimeInterval * numLEDFadeSteps);
-            for (int x = (this->stripConfigs[stripNum].numPixels - 1); x >= 0; x--) {
+            for (int x = (this->stripConfigs[stripNum].getNumPixels() - 1); x >= 0; x--) {
                 rLedColor = ledColor[stripNum][x];
                 ledColorOld[stripNum][x] = rLedColor;
                 rLedColorOld = ledColorOld[stripNum][x];
@@ -830,7 +911,7 @@ void LEDWaxPhoton::startFade(uint8_t stripNum) {
         case FADE_MODE_COLOR_WIPE:
         default:
             multiColorNextColorTime[stripNum] += (stripState[stripNum].fadeTimeInterval
-                    * this->stripConfigs[stripNum].numPixels);
+                    * this->stripConfigs[stripNum].getNumPixels());
             break;
     }
 }
@@ -848,7 +929,7 @@ void LEDWaxPhoton::doFade(uint8_t stripNum) {
             int x, y;
             if (ledFadeStepIndex[stripNum] >= numLEDFadeSteps) {
                 // finished, set end color
-                for (x = (this->stripConfigs[stripNum].numPixels - 1); x >= 0; x--) {
+                for (x = (this->stripConfigs[stripNum].getNumPixels() - 1); x >= 0; x--) {
                     rLedColorFadeTo = ledColorFadeTo[stripNum][x];
                     ledColor[stripNum][x] = rLedColorFadeTo;
                 }
@@ -856,7 +937,7 @@ void LEDWaxPhoton::doFade(uint8_t stripNum) {
             }
             if (ledFadeStepTime[stripNum] - millis() > stripState[stripNum].fadeTimeInterval) {
                 uint32_t newColor;
-                for (x = (this->stripConfigs[stripNum].numPixels - 1); x >= 0; x--) {
+                for (x = (this->stripConfigs[stripNum].getNumPixels() - 1); x >= 0; x--) {
                     newColor = ledColorOld[stripNum][x];
                     for (y = 2; y >= 0; y--) {
                         if (0 > ledFadeStep[stripNum][x * 3 + y]) {
@@ -889,7 +970,7 @@ void LEDWaxPhoton::doFade(uint8_t stripNum) {
             break;
         case FADE_MODE_COLOR_WIPE:
         default:
-            if (ledFadeStepIndex[stripNum] >= this->stripConfigs[stripNum].numPixels - 1) {
+            if (ledFadeStepIndex[stripNum] >= this->stripConfigs[stripNum].getNumPixels() - 1) {
                 // finished
                 stripState[stripNum].fading = false;
                 break;
@@ -910,7 +991,7 @@ void LEDWaxPhoton::doFade(uint8_t stripNum) {
 void LEDWaxPhoton::randomCandy(uint8_t stripNum) {
     if (multiColorNextColorTime[stripNum] - millis() > (uint32_t) stripState[stripNum].multiColorHoldTime) {
         // move old color down chain
-        for (int x = (int16_t) this->stripConfigs[stripNum].numPixels - 1; x > 0; x--) {
+        for (int x = (int16_t) this->stripConfigs[stripNum].getNumPixels() - 1; x > 0; x--) {
             ledColorFadeTo[stripNum][x] = ledColor[stripNum][x - 1];
         }
         // set new led color
@@ -929,7 +1010,7 @@ void LEDWaxPhoton::rainbow(uint8_t stripNum, uint16_t wait) {
             // 3 cycles of all 256 colors in the wheel
             rainbowStepIndex[stripNum] = 256 * 3;
         }
-        for (i = 0; i < this->stripConfigs[stripNum].numPixels; i++) {
+        for (i = 0; i < this->stripConfigs[stripNum].getNumPixels(); i++) {
             ledColorFadeTo[stripNum][i] = ledwaxUtil.wheel(
                     (i + rainbowStepIndex[stripNum]) % 255);
         }
@@ -947,13 +1028,13 @@ void LEDWaxPhoton::rainbowCycle(uint8_t stripNum, uint16_t wait) {
         if (rainbowStepIndex[stripNum] <= 0) {
             rainbowStepIndex[stripNum] = 256 * 5;
         }
-        for (i = 0; i < this->stripConfigs[stripNum].numPixels; i++) {
+        for (i = 0; i < this->stripConfigs[stripNum].getNumPixels(); i++) {
             // Use each pixel as a fraction of the full 256-color wheel
-            // (thats the i / strip.numPixels() part).
+            // (thats the i / strip.getNumPixels()() part).
             // Then add in j which makes the colors go around per pixel
             // the % 256 is to make the wheel cycle around
             ledColorFadeTo[stripNum][i] = ledwaxUtil.wheel(
-                    ((i * 256 / this->stripConfigs[stripNum].numPixels) + rainbowStepIndex[stripNum]) % 255);
+                    ((i * 256 / this->stripConfigs[stripNum].getNumPixels()) + rainbowStepIndex[stripNum]) % 255);
         }
         rainbowStepIndex[stripNum]--;
     }
@@ -963,16 +1044,15 @@ void LEDWaxPhoton::rainbowCycle(uint8_t stripNum, uint16_t wait) {
  * Render pixels for all strips.  Time-slice compatible.
  */
 void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
-    float brightness = stripState[stripNum].ledStripBrightness;
-    uint16_t *ledColorFadeToChannels = new uint16_t[this->stripConfigs[stripNum].numColorsPerPixel];
-    switch (this->stripConfigs[stripNum].stripType) {
+    uint16_t *ledColorFadeToChannels = new uint16_t[this->stripConfigs[stripNum].getNumColorsPerPixel()];
+    switch (this->stripConfigs[stripNum].getStripType()) {
         case STRIP_TYPE_I2C_PWM:
-            for (int i = 0; i < this->stripConfigs[stripNum].numPixels; i++) {
-                for (int j = 0; j < this->stripConfigs[stripNum].numColorsPerPixel; j++) {
+            for (int i = 0; i < this->stripConfigs[stripNum].getNumPixels(); i++) {
+                for (int j = 0; j < this->stripConfigs[stripNum].getNumColorsPerPixel(); j++) {
                     ledColorFadeToChannels[j] = (uint16_t) ((float) ((ledColor[stripNum][i] >> (8 * j)) & 0xFF)
-                            * brightness);
+                            / (stripState[stripNum].ledStripBrightnessScale / 4));
                     pwmDriver.setPin(
-                            stripConfigs[stripNum].i2cPWMPins[j], ledColorFadeToChannels[j], false);
+                            stripConfigs[stripNum].getI2cPwmPins()[j], ledColorFadeToChannels[j], true);
                 }
             }
             break;
@@ -982,12 +1062,13 @@ void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
         default:
             switch (stripState[stripNum].dispMode) {
                 case 30:
+                case 31:
                     fastLEDControllers[stripNum]->clearLedData();
                     sprites[stripNum]->UpdateSprites();
                     sprites[stripNum]->RenderSprites();
                     break;
                 default:
-                    for (int i = 0; i < this->stripConfigs[stripNum].numPixels; i++) {
+                    for (int i = 0; i < this->stripConfigs[stripNum].getNumPixels(); i++) {
                         addressableStripPixels[stripNum][i].setColorCode(
                                 ledColor[stripNum][i]);
                     }

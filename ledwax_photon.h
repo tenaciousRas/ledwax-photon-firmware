@@ -53,19 +53,25 @@ namespace ledwax {
             float ledStripBrightness;
             uint16_t ledStripBrightnessScale;
             void setLedStripBrightness(float bright) {
-                bright = max(bright, 0.0);
-                bright = min(bright, 1.0);
+                bright = max(
+                        bright, 0.0);
+                bright = min(
+                        bright, 1.0);
                 ledStripBrightness = bright;
                 ledStripBrightnessScale = (uint16_t) ledStripBrightness * 1024;
-            };
+            }
+            ;
             void setLedStripBrightness(uint16_t bright) {
-                bright = max(bright, 0);
-                bright = min(bright, 255);
+                bright = max(
+                        bright, 0);
+                bright = min(
+                        bright, 255);
                 ledStripBrightnessScale = bright;
                 ledStripBrightness = (float) ledStripBrightnessScale / (float) 1024;
-            };
+            }
+            ;
             uint8_t getLedStripBrightness8Bit() {
-                return (uint8_t) (ledStripBrightnessScale >> 2);
+                return (uint8_t) (ledStripBrightnessScale / 4);
             }
         } led_strip_disp_state;
 
@@ -86,12 +92,14 @@ namespace ledwax {
                         uint8_t), alternatingTwoRandomColors(uint8_t), alternatingThreeColors(uint8_t), startFade(
                         uint8_t), doFade(uint8_t), randomCandy(uint8_t), rainbow(uint8_t, uint16_t), rainbowCycle(
                         uint8_t, uint16_t), colorWipe(uint8_t, uint8_t), renderPixels(uint8_t),
-                resetAllStripsToDefault(), setSpriteColors(int), initSprites(uint8_t);
+                resetAllStripsToDefault(), setSpriteColors(int), initSprites(uint8_t), initCylonSprite(uint8_t),
+                initDotSprite(uint8_t);
         const char *buildStripStateJSON(), *buildLedModeColorJSONArr(int);
         int16_t getNumStrips();
         int16_t setRemoteControlStripIndex(string), setModeLEDColor(string), setDispMode(string), setBright(string),
                 setLedFadeTimeInterval(string), setMultiColorHoldTime(string), setLedFadeMode(string);
         uint32_t rgbColor(uint8_t, uint8_t, uint8_t), wheel(uint8_t);
+        uint32_t getTimeToFadeNow(uint8_t);
 
     private:
         ledwaxutil::LEDWaxPhotonUtil ledwaxUtil;
