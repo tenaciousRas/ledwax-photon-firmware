@@ -35,6 +35,7 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numStrips, ledwaxconfig::LEDWaxConfig *stripC
     this->spriteShapes = new cSprite**[numStrips];
     this->spriteShapesColorTables = new CRGB**[numStrips];
     this->fastLEDControllers = new CLEDController*[numStrips];
+    this->pwmDriver = new Adafruit_PWMServoDriver*[numStrips];
     uint16_t numFastLEDControllersDefd = 0, prevFastLEDControllerStripIndex = 0, fastLEDControllerLEDOffset = 0;
     for (int i = 0; i < numStrips; i++) {
         this->ledColor[i] = new uint32_t[this->stripConfigs[i].getNumPixels()];
@@ -114,17 +115,18 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numStrips, ledwaxconfig::LEDWaxConfig *stripC
                     this->spritedLEDCanvas[i]);
             this->spriteShapes[i] = new cSprite*[LEDWAX_NUM_FASTLED_SPRITES];    // hardcoded
             this->spriteShapesColorTables[i] = new CRGB*[LEDWAX_NUM_FASTLED_SPRITES];    // hardcoded
+            this->pwmDriver[i] = NULL;
         } else {
             hasPWMStrip = true;
             fastLEDControllers[i] = NULL;
             addressableStripPixels[i] = NULL;
             this->spritedLEDCanvas[i] = NULL;
             this->spriteShapes[i] = NULL;
+            pwmDriver[i] = new Adafruit_PWMServoDriver(
+                    0x70);
         }
     }
     if (hasPWMStrip) {
-        pwmDriver = Adafruit_PWMServoDriver(
-                0x70);
     }
 }
 
@@ -180,11 +182,11 @@ void LEDWaxPhoton::begin() {
                 i);
         startFade(
                 (uint8_t) i);
-    }
-    if (hasPWMStrip) {
-        pwmDriver.begin();
-        pwmDriver.setPWMFreq(
-                400.0);
+        if (pwmDriver[i] != NULL) {
+            pwmDriver[i]->begin();
+            pwmDriver[i]->setPWMFreq(
+                    400.0);
+        }
     }
 }
 
@@ -1065,7 +1067,7 @@ void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
                 for (int j = 0; j < this->stripConfigs[stripNum].getNumColorsPerPixel(); j++) {
                     ledColorFadeToChannels[j] = (uint16_t) ((float) ((ledColor[stripNum][i] >> (8 * j)) & 0xFF)
                             / (stripState[stripNum].ledStripBrightnessScale / 4));
-                    pwmDriver.setPin(
+                    pwmDriver[stripNum]->setPin(
                             stripConfigs[stripNum].getI2cPwmPins()[j], ledColorFadeToChannels[j], true);
                 }
             }

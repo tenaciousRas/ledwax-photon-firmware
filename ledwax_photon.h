@@ -123,7 +123,7 @@ namespace ledwax {
         int16_t eepromAddyStripState = 4;  // eeprom addy to store strip state
 
         bool hasPWMStrip = false;
-        Adafruit_PWMServoDriver pwmDriver;
+        Adafruit_PWMServoDriver** pwmDriver;
 
         cLEDSprites** sprites;
         cSprite*** spriteShapes;

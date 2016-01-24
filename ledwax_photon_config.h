@@ -94,6 +94,14 @@ namespace ledwaxconfig {
             this->i2cPins = i2cPins;
         }
 
+        uint16_t getI2cAddy() const {
+            return i2cAddy;
+        }
+
+        void setI2cAddy(uint16_t i2cAddy = 0) {
+            this->i2cAddy = i2cAddy;
+        }
+
         uint8_t* getI2cPwmPins() const {
             return i2cPWMPins;
         }
@@ -165,6 +173,7 @@ namespace ledwaxconfig {
         void setStripType(uint8_t stripType) {
             this->stripType = stripType;
         }
+
     };
 }
 #endif

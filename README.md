@@ -5,10 +5,11 @@
 An IoT LED controller for Particle Photon with support for PWM LEDs and WS28xx LED Strips.
 
 ## Features
-* Control arrays of LED strips from a single Photon
+* Control arrays of LED strips from a single Photon.
 * Set LED colors.  Millions of choices.
 * Set LED brightness.  255 choices.
 * Many display modes for single and multi-pixel LED strips.
+* Animated display modes.
 * Remembers previous settings when powered-up.
 * Native color fading.
 * IoT Enabled - REST API for control.
@@ -27,19 +28,36 @@ An IoT LED controller for Particle Photon with support for PWM LEDs and WS28xx L
 NOTE: Sparkfun WS2801 strip support is restored but untested.
 
 ### Firmware Configuration
+LEDWax uses a configuration object to setup the firmware.  This object, fields, and constructor can be viewed in ledwax_photon_config.h.
+
 Edit the code in application.cpp.  For example, where we have two strips, one PWM and another WS2812-type (2 strips):
 ```
 // *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
-#define NUM_STRIPS 2
-uint8_t stripTypes[NUM_STRIPS] = { STRIP_TYPE_PWM, STRIP_TYPE_WS2811 };
-uint8_t numLeds[NUM_STRIPS] = { 1, 60 };
-uint8_t numColorsPerPixel[NUM_STRIPS] = { NUM_PIXELS_PER_LED_PWM_RGB_STRIP, 3 };
-// TODO unfortunately FASTLED seems to require static pin assignment
-uint8_t pinDefs[NUM_STRIPS][3] = { { 0, 1, 2 }, { A5 } };  // only PWM mapping used
+config[0].setStripType(STRIP_TYPE_WS2811);
+config[0].setNumPixels(120);
+config[0].setNumColorsPerPixel(3);
+config[0].setSpiPins(new uint8_t[WIRE_NUM_SPI_1_WIRE]);
+config[0].getSpiPins()[0] = A5;
+config[0].setMatrix(true);
+config[0].setMatrixHeight(8);
+
+config[1].setStripType(STRIP_TYPE_I2C_PWM);
+config[1].setNumPixels(1);
+config[1].setNumColorsPerPixel(NUM_PIXELS_PER_LED_PWM_RGB_STRIP);
+config[1].setI2cPwmPins(new uint8_t[NUM_PIXELS_PER_LED_PWM_RGB_STRIP]);
+config[1].setI2cAddy(0x70);
+config[1].getI2cPwmPins()[0] = 0;
+config[1].getI2cPwmPins()[0] = 1;
+config[1].getI2cPwmPins()[0] = 2;
+config[1].setMatrix(false);
 // *********** END EDIT THIS SECTION ***********
 ```
 
-Note:  Please refer to ledwax_photon_constants.h and spark particle application.h for useful constants in this section.
+In the above example, the first strip is an addressable WS2811 strip (WS2801-type) that is connected to an SPI port.  It has 120 pixels with 3 colors per pixel (RGB).  The strip is split into 8 sections for animated display modes.  This allows for display of 2-D sprites on the strip to create interesting effects, such as mode 32.
+
+The second strip is connected to a PCA9685 I2C PWM chip.  It has 1 pixel.  NOTE:  on a (typical) PWM LED strip, the number of LEDs *_is not_* the same as the number of LEDs.  A pixel is individually controllable.  On a PWM strip, all of the LEDs take the same color, so there is only 1 pixel.  The PWM strip in this example is an RGB strip - so it has 3 colors.  It is *not* setup as a matrix.  There are settings for the I2C bus address.  The default I2C pins will be used to drive the PCA9685 chip.  There are settings for the output PWM pins on the PCA9685 chip.
+
+Note:  Please refer to ledwax_photon_config.h, ledwax_photon_constants.h, and spark particle application.h for useful constants.
 
 # Firmware Usage
 Setup LEDWax Photon with a LED strip and a Particle Photon.  Then control the strip using the exposed REST API.
@@ -102,16 +120,21 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 >		0. solid color (default)
 >		1. fade terawatt industries colors
 >		2. fade random colors
->		10. fade two colors
->		11. fade three colors
->		12. two alternating colors
->		13. terawatt industries alternating colors
->		14. three alternating colors
->		15. two random alternating colors
->		20. rainbow
->		21. rainbow cycle
->		22. random candy
->		30. cylon
+>		10. fade two colors : 2 user-defined colors, alternated across the whole strip
+>		11. fade three colors : 3 user-defined colors, alternated across the whole strip
+>		12. two alternating colors : 2 user-defined colors, alternated across the whole strip
+>		13. terawatt industries alternating colors : TW colors, alternated across the whole strip
+>		14. three alternating colors : 3 random colors, alternated across the whole strip
+>		15. two random alternating colors : 2 random colors, displayed by adjacent LEDs
+>		15. three random alternating colors : 3 random colors, displayed by adjacent LEDs
+>		20. rainbow : cycle whole strip through a rainbow of color
+>		21. rainbow cycle : same as above, but distribute the rainbow across strip
+>		22. random candy : random colors moving across the strip, one LED at a time
+>		30. cylon (animated) : animated cylon; works best with matrix height = 1 = whole strip
+>		31. dot (animated) : animated dot; works best with matrix height = 1 = whole strip
+>		32. square (animated) : 2-D square on a 1-D strip, works best with matrix height >= 6
+
+>		Display modes marked with (animated) currently only work with addressable (WS2811-type) strips.  Adjusting matrix settings will change how each animated mode is displayed.  The speed of motion can be controlled with the "lfti" command of the "setLEDParams" endpoint (below).  The color of the animation can be controlled with the "col" command.  Most animations will only use the first color mode setting.  Brightness can be adjusted normally.
 
 >	mht : Set holdTime - the multi-color-hold-time.  The multi-color-hold-time determines how long each color is displayed before the transition to the next color.  Valid values are 0 - 65535 (16-bit integer).
 
