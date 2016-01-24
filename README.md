@@ -124,9 +124,9 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 >		11. fade three colors : 3 user-defined colors, alternated across the whole strip
 >		12. two alternating colors : 2 user-defined colors, alternated across the whole strip
 >		13. terawatt industries alternating colors : TW colors, alternated across the whole strip
->		14. three alternating colors : 3 random colors, alternated across the whole strip
+>		14. three alternating colors : 3 user-defined colors, alternated across the whole strip
 >		15. two random alternating colors : 2 random colors, displayed by adjacent LEDs
->		15. three random alternating colors : 3 random colors, displayed by adjacent LEDs
+>		16. three random alternating colors : 3 random colors, displayed by adjacent LEDs
 >		20. rainbow : cycle whole strip through a rainbow of color
 >		21. rainbow cycle : same as above, but distribute the rainbow across strip
 >		22. random candy : random colors moving across the strip, one LED at a time

@@ -240,7 +240,11 @@ void LEDWaxPhoton::renderStrips() {
                         i);
                 break;
             case 15:
-                alternatingTwoRandomColors(
+                alternatingTwoColors(
+                        i);
+                break;
+            case 16:
+                alternatingThreeColors(
                         i);
                 break;
             case 20:
@@ -852,11 +856,6 @@ void LEDWaxPhoton::solidThreeColors(uint8_t stripNum) {
 }
 
 void LEDWaxPhoton::alternatingTwoColors(uint8_t stripNum) {
-    alternatingMultiColor(
-            stripNum, 2);
-}
-
-void LEDWaxPhoton::alternatingTwoRandomColors(uint8_t stripNum) {
     alternatingMultiColor(
             stripNum, 2);
 }
