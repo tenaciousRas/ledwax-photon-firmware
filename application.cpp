@@ -50,9 +50,7 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips();
 // LED Strip setup.
 // *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
 #define NUM_STRIPS 2
-uint8_t spiPinsPort1[1] = { A5 };
 // *********** END EDIT THIS SECTION ***********
-ledwaxconfig::LEDWaxConfig (*STRIP_CONFIGS);
 
 static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
     static ledwaxconfig::LEDWaxConfig* config = new ledwaxconfig::LEDWaxConfig[NUM_STRIPS];
@@ -78,8 +76,10 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
 }
 
 // global vars
+ledwaxconfig::LEDWaxConfig (*STRIP_CONFIGS) = init_strips();
 int numStrips = NUM_STRIPS;     //particle var
-ledwax::LEDWaxPhoton* LedWax;
+ledwax::LEDWaxPhoton* LedWax = new LEDWaxPhoton(
+        (uint8_t) numStrips, &STRIP_CONFIGS[0]);
 // particle vars = state members from LedWaxPhoton::led_strip_disp_state
 int remoteControlStripIndex, stripType, dispMode, ledFadeMode, ledModeColorIndex;
 char *ledModeColor = new char[620]; // return a string
@@ -88,9 +88,6 @@ long fadeTimeInterval;
 int ledStripBrightness;
 
 void setup() {
-    STRIP_CONFIGS = init_strips();
-    LedWax = new LEDWaxPhoton(
-            (uint8_t) numStrips, &STRIP_CONFIGS[0]);
     LedWax->begin();
     // init watchvars
     // set particle functions
