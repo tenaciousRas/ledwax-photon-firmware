@@ -61,7 +61,7 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
     config[0].setSpiPins(new uint8_t[WIRE_NUM_SPI_1_WIRE]);
     config[0].getSpiPins()[0] = A5;
     config[0].setMatrix(true);
-    config[0].setMatrixHeight(3);
+    config[0].setMatrixHeight(8);
 
 
     config[1].setStripType(STRIP_TYPE_I2C_PWM);
