@@ -2,7 +2,7 @@
   "name": "ledwax",
   "author": "Free Beachler, Longevity Software",
   "license": "Berkeley",
-  "version": "0.1",
+  "version": "0.2",
   "description": "A LED strip driver for the Photon",
   "namespace": "LEDWaxPhoton"
 }
