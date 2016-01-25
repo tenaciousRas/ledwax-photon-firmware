@@ -34,7 +34,7 @@ NOTE: Sparkfun WS2801 strip support is restored but untested.
 LEDWax uses a configuration object to setup the firmware.  This object, fields, and constructor can be viewed in ledwax_photon_config.h.
 
 Edit the code in application.cpp.  For example, where we have two strips, one PWM and another WS2812-type (2 strips):
-```
+```cpp
 // *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
 config[0].setStripType(STRIP_TYPE_WS2811);
 config[0].setNumPixels(120);
@@ -69,12 +69,12 @@ Note:  Please refer to ledwax_photon_config.h, ledwax_photon_constants.h, and sp
 #### SPI-based LED Strip (NeoPixel, WS2801, WS2812, etc.)
 In the above example, the first strip is an addressable WS2811 strip (WS2801-type) that is connected to an SPI port.  It has 120 pixels with 3 colors per pixel (RGB).  The strip is split into 8 sections for animated display modes.  This allows for display of 2-D sprites on the strip to create interesting effects, such as mode 32.
 
-In general, connecting an addressable LED-strip always requires a separate, rated, power supply.  Refer to the distributor or manufacturer datasheet.  *SPI-based LED strips connected to the Photon may require a voltage-level shifter for the SPI clock/data/select lines*.  The Photon has 3.3v GPIO and many addressable WS2801-type strips require 5v.
+In general, connecting an addressable LED-strip always requires a separate, rated, power supply.  Refer to the distributor or manufacturer datasheet.  __SPI-based LED strips connected to the Photon may require a voltage-level shifter for the SPI clock/data/select lines__.  The Photon has 3.3v GPIO and many addressable WS2801-type strips require 5v.
 
 #### I2C-based LED Strip (PCA9685)
 In the configuration example, the second strip is connected to a PCA9685 I2C PWM chip.  It has 1 pixel.  The PWM strip in this example is an RGB strip - so it has one (1) pixel with 3 colors.  It is *not* setup as a matrix.  There are settings for the I2C bus address.  The default I2C pins will be used to drive the PCA9685 chip.  There are settings for the output PWM pins on the PCA9685 chip.
 
-It is important to note that on a (typical) PWM LED strip, the number of LEDs *_is not_* the same as the number of LEDs.  A pixel is individually controllable, and each pixel on the strip is not individually controllable.  On a PWM strip, all of the LEDs take the same color, so there is only 1 pixel.
+It is important to note that on a (typical) PWM LED strip, the number of LEDs *is not* the same as the number of LEDs.  A pixel is individually controllable, and each pixel on the strip is not individually controllable.  On a PWM strip, all of the LEDs take the same color, so there is only 1 pixel.
 
 LEDWax supports multiple I2C-based PWM drivers with support for I2C addressing.  I2C devices can be chained together and given distinct addresses.  Additional LED strips can be configured in firmware for the attached I2C devices.
 
@@ -198,6 +198,35 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 * lfm;1
 * mod;22
 
+## RestAPI Examples
+Request Type | Request | Response
+:-------------|:---------|---------:
+POST | curl http://[cloud-ip-address-with-port]/v1/devices/3800XXXXXX473XXXX231XXXX/setLEDParams -d access_token=[access-token-from-particle-token-list] -d args="idx;1" | ``` {
+  "id": "3800XXXXXX473XXXX231XXXX",
+  "name": null,
+  "last_app": null,
+  "connected": true,
+  "return_value": 0
+}
+```
+POST | curl http://[cloud-ip-address-with-port]/v1/devices/3800XXXXXX473XXXX231XXXX/setLEDParams -d access_token=[access-token-from-particle-token-list] -d args="col;0,255" | ``` {
+  "id": "3800XXXXXX473XXXX231XXXX",
+  "name": null,
+  "last_app": null,
+  "connected": true,
+  "return_value": 0
+}
+```
+GET | curl http://[cloud-ip-address-with-port]/v1/devices/3800XXXXXX473XXXX231XXXX/colorTime?access_token=[access-token-from-particle-token-list] | ``` {
+  "cmd": "VarReturn",
+  "name": "colorTime",
+  "result": 19,
+  "coreInfo": {
+    "connected": true
+  }
+}
+```
+
 # Hardware
 Setting up a circuit with some LEDs isn't too difficult.  If you've never setup a LED circuit from scratch then checkout the fun products at Adafruit and Sparkfun for help.  If time permits an example circuit diagram and sketch configuration will be provided.
 
@@ -213,24 +242,24 @@ LEDWax-Photon is a C/C++ project targeted at ARM GNU EABI cross-tools compiling,
 The "master" branch shall be considered stable, but it's currently just a stub.  As of version 0.2, no branch is considered stable.  Version 0.2 is the latest as of 01/2016.
 
 ## Architectural Concepts
-The LEDWax-Phton firmware is built with a custom temporal multi-threading model.  There should never be a need to use delay().  Instead of delay's, new features should rely on state-machines that have the same effect.  There are currently two state machines.  They can be re-used for new features, or new state machines can be added.
+The LEDWax-Photon firmware is built with a custom temporal multi-threading model.  There should never be a need to use delay().  Instead of delays, new features should rely on state-machines that have the same effect.  There are currently two state machines.  They can be re-used for new features, or new state machines can be added.
 
-The second major concept utilized by LEDWax is to prefer runtime over compile-time configuration.  This has a major impact on design decisions and runtime performance risks.  For example it impacts decisions such as:  special attention must be taken to manage memory, hardcoded variable sizes and arrays are usually unacceptable, use of C++ Class templates is often incompatible with runtime configuration.
+The second major concept utilized by LEDWax is to prefer runtime over compile-time configuration.  This has a major impact on design decisions and runtime performance risks.  For example it impacts decisions such as class architecture and memory management.  Hardcoded variable sizes and arrays are usually unacceptable.  Use of C++ Class templates is often incompatible with runtime configuration.
 
-With that said, if you wish to contribute a pull request, please adopt the above principles or improve upon them.
+If you wish to contribute a pull request then please adopt the above principles or improve upon them.
 
 ## Getting started
-```
+```unix
 git clone https://github.com/tenaciousRas/ledwax-photon.git
 cd ledwax-photon
 git submodule init
 git submodule update
 ```
-NOTE:  The FastLED library is now a git submodule, hence the git submodule commands above.
+NOTE:  The FastLED, LEDMatrix, and LEDSprite libraries are git submodules, hence the git submodule commands above.
 
 ### Generate documentation
 This project uses Doxygen documentation generator (http://www.doxygen.org).  To view the source-code documentation you must first install DOxygen, then generate the docs.
-```
+```unix
 cd ledwax-photon
 doxygen ledwax_doxygen.config
 ```
