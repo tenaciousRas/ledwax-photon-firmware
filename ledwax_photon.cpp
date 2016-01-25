@@ -119,8 +119,9 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numStrips, ledwaxconfig::LEDWaxConfig *stripC
             addressableStripPixels[i] = NULL;
             this->spritedLEDCanvas[i] = NULL;
             this->spriteShapes[i] = NULL;
-            if (stripConfigs[i].stripType == STRIP_TYPE_I2C_PWM) {
-                pwmDriver[i] = new Adafruit_PWMServoDriver(stripConfigs[i].i2cAddy);
+            if (stripConfigs[i].getStripType() == STRIP_TYPE_I2C_PWM) {
+                pwmDriver[i] = new Adafruit_PWMServoDriver(
+                        stripConfigs[i].getI2cAddy());
             } else {
                 pwmDriver[i] = NULL;
             }
@@ -165,7 +166,6 @@ LEDWaxPhoton::~LEDWaxPhoton() {
     delete this->flash;
     delete this->stripState;
     delete this->stripConfigs;
-    delete this->ledwaxUtil;
 }
 
 int16_t LEDWaxPhoton::getNumStrips() {
@@ -708,7 +708,8 @@ int16_t LEDWaxPhoton::setDispMode(string command) {
             bData, 0);
     bData = min(
             bData, 32);
-    if (bData > 29 && !ledwaxUtil.isAddressableStrip(stripConfigs[remoteControlStripIndex].stripType)) {
+    if (bData > 29 && !ledwaxUtil.isAddressableStrip(
+            stripConfigs[remoteControlStripIndex].getStripType())) {
         // invalid disp mode for PWM strip
         return 1;
     }

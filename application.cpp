@@ -66,7 +66,7 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
     config[1].setStripType(STRIP_TYPE_I2C_PWM);
     config[1].setNumPixels(1);
     config[1].setNumColorsPerPixel(NUM_PIXELS_PER_LED_PWM_RGB_STRIP);
-    config[1].setI2cAddy(0x70);
+    config[1].setI2cAddy(0xE0);
     config[1].setI2cPwmPins(new uint8_t[NUM_PIXELS_PER_LED_PWM_RGB_STRIP]);
     config[1].getI2cPwmPins()[0] = 0;
     config[1].getI2cPwmPins()[0] = 1;
