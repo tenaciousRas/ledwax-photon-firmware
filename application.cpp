@@ -49,7 +49,7 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips();
 
 // LED Strip setup.
 // *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
-#define NUM_STRIPS 2
+#define NUM_STRIPS 3
 // *********** END EDIT THIS SECTION ***********
 
 static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
@@ -63,7 +63,6 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
     config[0].setMatrix(true);
     config[0].setMatrixHeight(8);
 
-
     config[1].setStripType(STRIP_TYPE_I2C_PWM);
     config[1].setNumPixels(1);
     config[1].setNumColorsPerPixel(NUM_PIXELS_PER_LED_PWM_RGB_STRIP);
@@ -73,6 +72,15 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
     config[1].getI2cPwmPins()[0] = 1;
     config[1].getI2cPwmPins()[0] = 2;
     config[1].setMatrix(false);
+
+    config[2].setStripType(STRIP_TYPE_NATIVE_PWM);
+    config[2].setNumPixels(1);
+    config[2].setNumColorsPerPixel(NUM_PIXELS_PER_LED_PWM_RGB_STRIP);
+    config[2].setNativePwmPins(new uint8_t[NUM_PIXELS_PER_LED_PWM_RGB_STRIP]);
+    config[2].getNativePwmPins()[0] = RX;
+    config[2].getNativePwmPins()[0] = TX;
+    config[2].getNativePwmPins()[0] = WKP;
+    config[2].setMatrix(false);
     // *********** END EDIT THIS SECTION ***********
     return config;
 }

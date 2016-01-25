@@ -117,16 +117,16 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 
 >	mod : set dispMode - the strip display mode.  Valid values are:
 
->		0. solid color (default)
->		1. fade terawatt industries colors
->		2. fade random colors
->		10. fade two colors : 2 user-defined colors, alternated across the whole strip
->		11. fade three colors : 3 user-defined colors, alternated across the whole strip
->		12. two alternating colors : 2 user-defined colors, alternated across the whole strip
->		13. terawatt industries alternating colors : TW colors, alternated across the whole strip
->		14. three alternating colors : 3 user-defined colors, alternated across the whole strip
->		15. two random alternating colors : 2 random colors, displayed by adjacent LEDs
->		16. three random alternating colors : 3 random colors, displayed by adjacent LEDs
+>		0. solid color (default) : 1 user-defined color displayed on strip
+>		1. fade terawatt industries colors : display TW colors, across entire strip - alernate entire strip bewtween colors
+>		2. fade random colors : display 2 random colors, across entire strip - alernate entire strip bewtween colors
+>		10. fade two colors : display 2 user-defined colors, across entire strip - alernate entire strip bewtween colors
+>		11. fade three colors : display 3 user-defined colors, across entire strip - alernate entire strip bewtween colors
+>		12. two alternating colors : 2 user-defined colors, displayed on alternating pixels
+>		13. terawatt industries alternating colors : TW colors, displayed on alternating pixels
+>		14. three alternating colors : 3 user-defined colors, displayed on alternating pixels
+>		15. two random alternating colors : 2 random colors, displayed on alternating pixels
+>		16. three random alternating colors : 3 random colors, displayed on alternating pixels
 >		20. rainbow : cycle whole strip through a rainbow of color
 >		21. rainbow cycle : same as above, but distribute the rainbow across strip
 >		22. random candy : random colors moving across the strip, one LED at a time

@@ -15,9 +15,6 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numStrips, ledwaxconfig::LEDWaxConfig *stripC
     // init eeprom
     this->flash = Flashee::Devices::createDefaultStore();
     this->numStrips = numStrips;
-//    this->stripType = &stripType[0];
-//    this->stripNumPixels = &stripNumPixels[0];
-//    this->stripNumColorsPerPixel = &stripNumColorsPerPixel[0];
     this->stripConfigs = stripConfigs;
     this->stripState = new led_strip_disp_state[numStrips];
     this->ledModeColorJSONArr = new char[620];
@@ -42,9 +39,9 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numStrips, ledwaxconfig::LEDWaxConfig *stripC
         this->ledColorOld[i] = new uint32_t[this->stripConfigs[i].getNumPixels()];
         this->ledColorFadeTo[i] = new uint32_t[this->stripConfigs[i].getNumPixels()];
         this->ledFadeStep[i] = new double[this->stripConfigs[i].getNumPixels() * 3];
-        this->addressableStripPixels[i] = new CRGB[this->stripConfigs[i].getNumPixels()];
         if (ledwaxUtil.isAddressableStrip(
                 this->stripConfigs[i].getStripType())) {
+            this->addressableStripPixels[i] = new CRGB[this->stripConfigs[i].getNumPixels()];
             // smelly way to distinguish SPI ports
             if (this->stripConfigs[prevFastLEDControllerStripIndex].getSpiPins()[0]
                     != this->stripConfigs[i].getSpiPins()[0]) {
@@ -122,24 +119,36 @@ LEDWaxPhoton::LEDWaxPhoton(uint8_t numStrips, ledwaxconfig::LEDWaxConfig *stripC
             addressableStripPixels[i] = NULL;
             this->spritedLEDCanvas[i] = NULL;
             this->spriteShapes[i] = NULL;
-            pwmDriver[i] = new Adafruit_PWMServoDriver(
-                    0x70);
+            if (stripConfigs[i].stripType == STRIP_TYPE_I2C_PWM) {
+                pwmDriver[i] = new Adafruit_PWMServoDriver(stripConfigs[i].i2cAddy);
+            } else {
+                pwmDriver[i] = NULL;
+            }
         }
-    }
-    if (hasPWMStrip) {
     }
 }
 
 LEDWaxPhoton::~LEDWaxPhoton() {
     for (int i = 0; i < numStrips; i++) {
+        delete this->fastLEDControllers[i];
+        delete this->pwmDriver[i];
         delete this->ledColor[i];
         delete this->ledColorOld[i];
         delete this->ledColorFadeTo[i];
-        delete this->addressableStripPixels[i];
         delete this->ledFadeStep[i];
+        for (int j = 0; j < 3; j++) {
+            delete this->spriteShapes[i][j];
+            delete this->spriteShapesColorTables[i][j];
+        }
+        delete this->sprites[i];
+        delete this->spriteShapes[i];
+        delete this->spriteShapesColorTables[i];
+        delete this->addressableStripPixels[i];
     }
-    delete this->stripState;
+    delete this->ledModeColorJSONArr;
     delete this->multiColorNextColorTime;
+    delete this->fastLEDControllers;
+    delete this->pwmDriver;
     delete this->ledColor;
     delete this->ledColorOld;
     delete this->ledColorFadeTo;
@@ -147,7 +156,16 @@ LEDWaxPhoton::~LEDWaxPhoton() {
     delete this->ledFadeStepIndex;
     delete this->ledFadeStep;
     delete this->rainbowStepIndex;
+    delete this->spritedLEDCanvas;
+    delete this->sprites;
+    delete this->spriteShapes;
+    delete this->spriteShapesColorTables;
+    delete this->spritedLEDCanvas;
     delete this->addressableStripPixels;
+    delete this->flash;
+    delete this->stripState;
+    delete this->stripConfigs;
+    delete this->ledwaxUtil;
 }
 
 int16_t LEDWaxPhoton::getNumStrips() {
@@ -690,6 +708,10 @@ int16_t LEDWaxPhoton::setDispMode(string command) {
             bData, 0);
     bData = min(
             bData, 32);
+    if (bData > 29 && !ledwaxUtil.isAddressableStrip(stripConfigs[remoteControlStripIndex].stripType)) {
+        // invalid disp mode for PWM strip
+        return 1;
+    }
     stripState[remoteControlStripIndex].dispMode = bData;
     setDispModeColors(
             remoteControlStripIndex, stripState[remoteControlStripIndex].dispMode);
@@ -1061,13 +1083,19 @@ void LEDWaxPhoton::rainbowCycle(uint8_t stripNum, uint16_t wait) {
 void LEDWaxPhoton::renderPixels(uint8_t stripNum) {
     uint16_t *ledColorFadeToChannels = new uint16_t[this->stripConfigs[stripNum].getNumColorsPerPixel()];
     switch (this->stripConfigs[stripNum].getStripType()) {
+        case STRIP_TYPE_NATIVE_PWM:
         case STRIP_TYPE_I2C_PWM:
             for (int i = 0; i < this->stripConfigs[stripNum].getNumPixels(); i++) {
                 for (int j = 0; j < this->stripConfigs[stripNum].getNumColorsPerPixel(); j++) {
                     ledColorFadeToChannels[j] = (uint16_t) ((float) ((ledColor[stripNum][i] >> (8 * j)) & 0xFF)
                             / (stripState[stripNum].ledStripBrightnessScale / 4));
-                    pwmDriver[stripNum]->setPin(
-                            stripConfigs[stripNum].getI2cPwmPins()[j], ledColorFadeToChannels[j], true);
+                    if (STRIP_TYPE_I2C_PWM == this->stripConfigs[stripNum].getStripType()) {
+                        pwmDriver[stripNum]->setPin(
+                                stripConfigs[stripNum].getI2cPwmPins()[j], ledColorFadeToChannels[j], true);
+                    } else {
+                        analogWrite(
+                                stripConfigs[stripNum].getNativePwmPins()[j], ledColorFadeToChannels[j]);
+                    }
                 }
             }
             break;
