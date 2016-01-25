@@ -5,7 +5,7 @@
 An IoT LED controller for Particle Photon with support for PWM LEDs and WS28xx LED Strips.
 
 ## Features
-* Control arrays of LED strips from a single Photon.
+* Efficiently control arrays of LED strips from a single Photon.
 * Set LED colors.  Millions of choices.
 * Set LED brightness.  255 choices.
 * Many display modes for single and multi-pixel LED strips.
@@ -14,9 +14,12 @@ An IoT LED controller for Particle Photon with support for PWM LEDs and WS28xx L
 * Native color fading.
 * IoT Enabled - REST API for control.
 * Supports Particle Photon.
+* Designed and built to drive piles of LEDs.
 * Support for single-color PWM LED strips.
 * Support for multi-color (RGB+, PWM) LED strips.
 * Support for many types of (SPI) Addressable LED strips, such as WS2801, WS2811, and WS2812.
+* Support for I2C PWM LED controller (PCA9685).
+* Support for PWM output from Photon's PWM pins (native PWM).
 * Non-blocking, time-sliced firmware.
 
 ## Setup
@@ -50,25 +53,67 @@ config[1].getI2cPwmPins()[0] = 0;
 config[1].getI2cPwmPins()[0] = 1;
 config[1].getI2cPwmPins()[0] = 2;
 config[1].setMatrix(false);
+
+config[2].setStripType(STRIP_TYPE_NATIVE_PWM);
+config[2].setNumPixels(1);
+config[2].setNumColorsPerPixel(NUM_PIXELS_PER_LED_PWM_RGB_STRIP);
+config[2].setNativePwmPins(new uint8_t[NUM_PIXELS_PER_LED_PWM_RGB_STRIP]);
+config[2].getNativePwmPins()[0] = RX;
+config[2].getNativePwmPins()[0] = TX;
+config[2].getNativePwmPins()[0] = WKP;
+config[2].setMatrix(false);
 // *********** END EDIT THIS SECTION ***********
 ```
-
-In the above example, the first strip is an addressable WS2811 strip (WS2801-type) that is connected to an SPI port.  It has 120 pixels with 3 colors per pixel (RGB).  The strip is split into 8 sections for animated display modes.  This allows for display of 2-D sprites on the strip to create interesting effects, such as mode 32.
-
-The second strip is connected to a PCA9685 I2C PWM chip.  It has 1 pixel.  NOTE:  on a (typical) PWM LED strip, the number of LEDs *_is not_* the same as the number of LEDs.  A pixel is individually controllable.  On a PWM strip, all of the LEDs take the same color, so there is only 1 pixel.  The PWM strip in this example is an RGB strip - so it has 3 colors.  It is *not* setup as a matrix.  There are settings for the I2C bus address.  The default I2C pins will be used to drive the PCA9685 chip.  There are settings for the output PWM pins on the PCA9685 chip.
-
 Note:  Please refer to ledwax_photon_config.h, ledwax_photon_constants.h, and spark particle application.h for useful constants.
 
+#### SPI-based LED Strip (NeoPixel, WS2801, WS2812, etc.)
+In the above example, the first strip is an addressable WS2811 strip (WS2801-type) that is connected to an SPI port.  It has 120 pixels with 3 colors per pixel (RGB).  The strip is split into 8 sections for animated display modes.  This allows for display of 2-D sprites on the strip to create interesting effects, such as mode 32.
+
+In general, connecting an addressable LED-strip always requires a separate, rated, power supply.  Refer to the distributor or manufacturer datasheet.  *SPI-based LED strips connected to the Photon may require a voltage-level shifter for the SPI clock/data/select lines*.  The Photon has 3.3v GPIO and many addressable WS2801-type strips require 5v.
+
+#### I2C-based LED Strip (PCA9685)
+In the configuration example, the second strip is connected to a PCA9685 I2C PWM chip.  It has 1 pixel.  The PWM strip in this example is an RGB strip - so it has one (1) pixel with 3 colors.  It is *not* setup as a matrix.  There are settings for the I2C bus address.  The default I2C pins will be used to drive the PCA9685 chip.  There are settings for the output PWM pins on the PCA9685 chip.
+
+It is important to note that on a (typical) PWM LED strip, the number of LEDs *_is not_* the same as the number of LEDs.  A pixel is individually controllable, and each pixel on the strip is not individually controllable.  On a PWM strip, all of the LEDs take the same color, so there is only 1 pixel.
+
+LEDWax supports multiple I2C-based PWM drivers with support for I2C addressing.  I2C devices can be chained together and given distinct addresses.  Additional LED strips can be configured in firmware for the attached I2C devices.
+
+In general, using a PCA9685 IC to drive LED-strips with a Photon always requires a separate power supply for the LEDs and/or LED-strip.  The PCA9685 is powered with 5v, which can be the same 5v used to power the Photon.  The PCA9685 data bus supports 3.3v GPIO (from the Photon), so a voltage-level shifter should not be required (to be verified).
+
+Driving a small number of LEDs connected directly to a PCA9685 is possible, since it can sink more current than a Photon.  However a power supply that can handle the load is still required.  Check the current requirements on the LED datasheet.
+
+Driving LED-strips with a PCA9685 typically requires a MOSFET circuit.  The PCA9685 is used to drive the FET gate pins high/low to permit current to flow.  N-channel FETs work well with common-anode LED strips.  With this hardware, the common anode is wired to a seperate 12v/24v power supply.  Other voltages are fine as long as the FET is rated for it.  Each LED cathode is then wired through the FET, so the circuit is closed (to ground) when the FET gate is driven high.
+
+#### Native PWM LEDs
+The third strip (actually, just a single LED) is connected directly by the Photon's PWM pins.  This requires a MOSFET (or equivalent) power driver circuit.  Be careful of power requirements!  You can drive a single LED - of 1 colors, maybe more, without additional power.  The LED must not pull too much current from the Photon - see the datasheet for the Photon and your LED to determine if it's within a safe range.  The LED that comes with the Sparkfun Photon development kit is OK.
+
+In general it is difficult to use native PWM alongside SPI and/or I2C LED controllers.  This is due to the limitations on power draw.  There are also a limited number of PWM output pins.  Finally, several of the PWM output pins conflict with SPI and I2C pins (interfaces) on the Photon.  *It is not possible to double-purpose a pin.*  For example it is not possible to configure a pin to be used for SPI and native PWM.
+
+Native PWM output from the Photon can be combined with a MOSFET circuit, as with a PCA9685, to drive the maximum number of LEDs with a seperate power supply.  The same circuit (i.e. fet-board) can be used in both configurations.
+
+# Efficiency
+LEDWax is designed and built to support a heap of LEDs and LED-strips of varying types.  The primary focus is on support for LED-driver chips, and particularly those chips which independently maintain state - such as WS2801 and PCA9685.  This means LEDWax can issue a command to set color/brightness to a LED driver, and the driver holds that setting until it gets a new command.
+
+LEDWax takes advantage of this architecture to reduce the amount of work it has to do.  This means it can drive more LED-strips with smoother animations.  It should be capable of driving hudreds, perhaps thousands, of individual pixels (TBD).
+
+Still, there are limitations.  I'm not sure how many strips it can drive simultaneously before noticeable latency occurs.  Actually, the number of strips isn't the main constraint, but rather - the number of distinctly addressable pixels defined in the strip firmware configuration.  Each pixel gets its own memory space and color processing.  The actual limits on memory are unknown (TBD), as are baseline processing costs, but these are the heaviest factors.
+
+Once pixel memory has been processed, which only happens when it needs to, then it's output to the connected interface - SPI, I2C, or native PWM.  The amount of time spent sending signals on the output interfaces may be non-negligible.  If SPI-bus interface-speed is 8mhz, then in theory the bus can transmit 125kB/s, and if each LED on a strip takes a byte of data, then in theory an SPI interface can address 125k LEDs per second.  The same goes for I2C.  However the CPU is busy processing memory and data.  Maximum efficiency is achieved when SPI and/or I2C interfaces use the builtin hardware-based GPIO provided by the Photon.
+
+NOTE:  Unfortunately the FastLED (and I2C?) libraries use software-based GPIO.  This means LEDWax must wait for the library to clock all of the data to the target bus (SPI).  The time spent clocking the data is proportional to the number of pixels attached to the bus.  In the example above with 8mhz bus, using a 60-LED RGB WS2811 strip, the time spent clocking data is at least sixty microseconds (60us).
+
 # Firmware Usage
-Setup LEDWax Photon with a LED strip and a Particle Photon.  Then control the strip using the exposed REST API.
+Setup LEDWax Photon with a LED strip and a Particle Photon.  Then control the strip using the exposed REST API.  Send HTTP POST commands to change color, display mode, animation, etc.  Issue HTTP GET requests to discover LEDWax configuration data, such as number of strips, display mode, colors, etc.
 
 There are only 2 or 3 basic concepts you need to understand for controlling the strips.  First, there is a "mod" command that tells LEDWax how many colors to display and how to cycle through them.  Sending a valid "mod" command will cause the value of the "ledDisplayMode" particle variable to be updated.
 
-Several display modes are supported.  Their behavior varies but there are two (2) basic families of display modes.  In "family 1" the user can configure up to 3 different colors which can be displayed in different ways on the strip.  In "family 2" the colors are pre-set, and the user may have the option to customize a parameter of the display mode (for example:  cycle through a rainbow of pre-defined colors, user-defined length of time to cycle). 
+Several display modes are supported.  Their behavior varies but there are three (3) basic families of display modes.  In "family 1" the user can configure up to 3 different colors which can be displayed in different ways on the strip.  In "family 2" the colors are pre-set, and the user may have the option to customize a parameter of the display mode (for example:  cycle through a rainbow of pre-defined colors, user-defined length of time to cycle).  A "family 3" display mode is an animated (sprite-based) display mode, for example the "cylon" and "dot" display modes.  These display modes are only compatible (currently) with SPI-based addressable LED-strips.
 
 If the displayMode parameter is set to a "family 1" mode, then colors can be customized using the "col" command.
 
 If the displayMode parameter is set to a "family 2" mode, then the multiColorHoldTime and ledFadeTime may or may not have an impact on the display behavior, depending on the mode.
+
+If the displayMode parameter is set to a "family 3" mode, then the ledFadeTime typically impacts the display behavior, depending on the mode.  For example, in cylon mode is adjusts the speed of the moving pattern, with lower values being faster (less delay).
 
 Understanding the above concepts will allow for basic control using raw commands.  There are more commands and variables for finer control and customization.
 
@@ -227,13 +272,14 @@ Atom is the secondary (unsupported) IDE:
 - Example circuit with example sketch config
 
 ####Credits
-Thanks to all the contributors who made this software possible.
+Thanks to all the contributors who made this software possible.  This is an evolved codebase.
 
-Adafruit (http://www.adafruit.com) for help with I2C library.
 FastLED SPI library.
+LEDMatrix and LEDSprite libraries.
+Adafruit (http://www.adafruit.com) for help with I2C library.
 Flashee EEPROM library.
 
-Thanks to Sparkfun, Inc. for open source firmware and PCBs.
+Thanks to Sparkfun, Inc. and Adafruit for open source products.
 
 Based on the open-source ledstrip-home Arduino sketch (https://github.com/tenaciousRas/ledstrip-home/).
 
