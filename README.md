@@ -201,31 +201,9 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 ## RestAPI Examples
 Request Type | Request | Response
 :-------------|:---------|---------:
-POST | curl http://[cloud-ip-address-with-port]/v1/devices/3800XXXXXX473XXXX231XXXX/setLEDParams -d access_token=[access-token-from-particle-token-list] -d args="idx;1" | ``` {
-  "id": "3800XXXXXX473XXXX231XXXX",
-  "name": null,
-  "last_app": null,
-  "connected": true,
-  "return_value": 0
-}
-```
-POST | curl http://[cloud-ip-address-with-port]/v1/devices/3800XXXXXX473XXXX231XXXX/setLEDParams -d access_token=[access-token-from-particle-token-list] -d args="col;0,255" | ``` {
-  "id": "3800XXXXXX473XXXX231XXXX",
-  "name": null,
-  "last_app": null,
-  "connected": true,
-  "return_value": 0
-}
-```
-GET | curl http://[cloud-ip-address-with-port]/v1/devices/3800XXXXXX473XXXX231XXXX/colorTime?access_token=[access-token-from-particle-token-list] | ``` {
-  "cmd": "VarReturn",
-  "name": "colorTime",
-  "result": 19,
-  "coreInfo": {
-    "connected": true
-  }
-}
-```
+POST | curl http://[cloud-ip-address-with-port]/v1/devices/3800XXXXXX473XXXX231XXXX/setLEDParams -d access_token=[access-token-from-particle-token-list] -d args="idx;1" | {  "id": "3800XXXXXX473XXXX231XXXX",  "name": null, "last_app": null,   "connected": true,   "return_value": 0 }
+POST | curl http://[cloud-ip-address-with-port]/v1/devices/3800XXXXXX473XXXX231XXXX/setLEDParams -d access_token=[access-token-from-particle-token-list] -d args="col;0,255" | {  "id": "3800XXXXXX473XXXX231XXXX",  "name": null,  "last_app": null,   "connected": true,   "return_value": 0 }
+GET | curl http://[cloud-ip-address-with-port]/v1/devices/3800XXXXXX473XXXX231XXXX/colorTime?access_token=[access-token-from-particle-token-list] | {  "cmd": "VarReturn",  "name": "colorTime",  "result": 19,  "coreInfo": {    "connected": true   } }
 
 # Hardware
 Setting up a circuit with some LEDs isn't too difficult.  If you've never setup a LED circuit from scratch then checkout the fun products at Adafruit and Sparkfun for help.  If time permits an example circuit diagram and sketch configuration will be provided.
