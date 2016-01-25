@@ -318,7 +318,7 @@ void LEDWaxPhoton::defaultStripState(uint8_t stripNum) {
     stripState[stripNum].fadeTimeInterval = LED_FADE_STEP_DELAY_MS
     ;
     stripState[stripNum].setLedStripBrightness(
-            (uint16_t) 1024);
+            (uint16_t) 1023);
 }
 
 /**

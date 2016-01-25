@@ -7,7 +7,7 @@ An IoT LED controller for Particle Photon with support for PWM LEDs and WS28xx L
 ## Features
 * Efficiently control arrays of LED strips from a single Photon.
 * Set LED colors.  Millions of choices.
-* Set LED brightness.  255 choices.
+* Set LED brightness.  1024 (10-bit) choices.
 * Many display modes for single and multi-pixel LED strips.
 * Animated display modes.
 * Remembers previous settings when powered-up.
@@ -147,7 +147,7 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 >	where mode-color-index is the index of the mode color (family 1 display mode) to set
 >	valid color values are 0 - 16777215 (24-bit integer)
 
->	brt : set brightness - the strip brightness. Valid values are from 0 (0% = full off) to 255 (100% = full on).  Brightness is stored sepearately from color in firmware.
+>	brt : set brightness - the strip brightness. Valid values are from 0 (0% = full off) to 1023 (100% = full on).  NOTE:  even though brightness is stored as a 10-bit value, it is currently displayed as an 8-bit value.  Thus a value of 1023 in 10-bit storage corresponds to a display value of 255 in brightness.  Brightness is stored sepearately from color in firmware.
 
 >	mod : set dispMode - the strip display mode.  Valid values are:
 
@@ -186,6 +186,8 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 * col;2,64
 * lfm;1
 * mod;22
+* brt;0
+* brt;512
 
 ## RestAPI Examples
 Request Type | Request | Response

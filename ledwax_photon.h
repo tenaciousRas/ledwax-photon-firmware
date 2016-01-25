@@ -58,16 +58,16 @@ namespace ledwax {
                 bright = min(
                         bright, 1.0);
                 ledStripBrightness = bright;
-                ledStripBrightnessScale = (uint16_t) ledStripBrightness * 1024;
+                ledStripBrightnessScale = (uint16_t) ledStripBrightness * 1023;
             }
             ;
             void setLedStripBrightness(uint16_t bright) {
                 bright = max(
                         bright, 0);
                 bright = min(
-                        bright, 255);
+                        bright, 1023);
                 ledStripBrightnessScale = bright;
-                ledStripBrightness = (float) ledStripBrightnessScale / (float) 1024;
+                ledStripBrightness = (float) ledStripBrightnessScale / (float) 1023;
             }
             ;
             uint8_t getLedStripBrightness8Bit() {
