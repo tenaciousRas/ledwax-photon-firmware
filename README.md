@@ -91,17 +91,6 @@ In general it is difficult to use native PWM alongside SPI and/or I2C LED contro
 
 Native PWM output from the Photon can be combined with a MOSFET circuit, as with a PCA9685, to drive the maximum number of LEDs with a seperate power supply.  The same circuit (i.e. fet-board) can be used in both configurations.
 
-# Efficiency
-LEDWax is designed and built to support a heap of LEDs and LED-strips of varying types.  The primary focus is on support for LED-driver chips, and particularly those chips which independently maintain state - such as WS2801 and PCA9685.  This means LEDWax can issue a command to set color/brightness to a LED driver, and the driver holds that setting until it gets a new command.
-
-LEDWax takes advantage of this architecture to reduce the amount of work it has to do.  This means it can drive more LED-strips with smoother animations.  It should be capable of driving hudreds, perhaps thousands, of individual pixels (TBD).
-
-Still, there are limitations.  I'm not sure how many strips it can drive simultaneously before noticeable latency occurs.  Actually, the number of strips isn't the main constraint, but rather - the number of distinctly addressable pixels defined in the strip firmware configuration.  Each pixel gets its own memory space and color processing.  The actual limits on memory are unknown (TBD), as are baseline processing costs, but these are the heaviest factors.
-
-Once pixel memory has been processed, which only happens when it needs to, then it's output to the connected interface - SPI, I2C, or native PWM.  The amount of time spent sending signals on the output interfaces may be non-negligible.  If SPI-bus interface-speed is 8mhz, then in theory the bus can transmit 125kB/s, and if each LED on a strip takes a byte of data, then in theory an SPI interface can address 125k LEDs per second.  The same goes for I2C.  However the CPU is busy processing memory and data.  Maximum efficiency is achieved when SPI and/or I2C interfaces use the builtin hardware-based GPIO provided by the Photon.
-
-NOTE:  Unfortunately the FastLED (and I2C?) libraries use software-based GPIO.  This means LEDWax must wait for the library to clock all of the data to the target bus (SPI).  The time spent clocking the data is proportional to the number of pixels attached to the bus.  In the example above with 8mhz bus, using a 60-LED RGB WS2811 strip, the time spent clocking data is at least sixty microseconds (60us).
-
 # Firmware Usage
 Setup LEDWax Photon with a LED strip and a Particle Photon.  Then control the strip using the exposed REST API.  Send HTTP POST commands to change color, display mode, animation, etc.  Issue HTTP GET requests to discover LEDWax configuration data, such as number of strips, display mode, colors, etc.
 
@@ -213,6 +202,17 @@ The latest version of this firmware is intended for a PWM driver IC to extend th
 This project is intended for serious amateur usage.  The user of this software assumes all resposibility.  By using this software you agree to its terms and conditions.  See LICENSE.txt.
 
 I've designed a custom PCB which is undergoing testing so this can be assembled more easily.  The PCB makes it easier to setup different types of LED strips with a Photon.
+
+# Efficiency
+LEDWax is designed and built to support a heap of LEDs and LED-strips of varying types.  The primary focus is on support for LED-driver chips, and particularly those chips which independently maintain state - such as WS2801 and PCA9685.  This means LEDWax can issue a command to set color/brightness to a LED driver, and the driver holds that setting until it gets a new command.
+
+LEDWax takes advantage of this architecture to reduce the amount of work it has to do.  This means it can drive more LED-strips with smoother animations.  It should be capable of driving hudreds, perhaps thousands, of individual pixels (TBD).
+
+Still, there are limitations.  I'm not sure how many strips it can drive simultaneously before noticeable latency occurs.  Actually, the number of strips isn't the main constraint, but rather - the number of distinctly addressable pixels defined in the strip firmware configuration.  Each pixel gets its own memory space and color processing.  The actual limits on memory are unknown (TBD), as are baseline processing costs, but these are the heaviest factors.
+
+Once pixel memory has been processed, which only happens when it needs to, then it's output to the connected interface - SPI, I2C, or native PWM.  The amount of time spent sending signals on the output interfaces may be non-negligible.  If SPI-bus interface-speed is 8mhz, then in theory the bus can transmit 125kB/s, and if each LED on a strip takes a byte of data, then in theory an SPI interface can address 125k LEDs per second.  The same goes for I2C.  However the CPU is busy processing memory and data.  Maximum efficiency is achieved when SPI and/or I2C interfaces use the builtin hardware-based GPIO provided by the Photon.
+
+NOTE:  Unfortunately the FastLED (and I2C?) libraries use software-based GPIO.  This means LEDWax must wait for the library to clock all of the data to the target bus (SPI).  The time spent clocking the data is proportional to the number of pixels attached to the bus.  In the example above with 8mhz bus, using a 60-LED RGB WS2811 strip, the time spent clocking data is at least sixty microseconds (60us).
 ***
 # Develop & Contribute
 LEDWax-Photon is a C/C++ project targeted at ARM GNU EABI cross-tools compiling, specifically for the Photon/STM platform.  To compile this software from scratch you need a cross-compiler toolchain, such as the ones found at https://launchpad.net/gcc-arm-embedded/.
