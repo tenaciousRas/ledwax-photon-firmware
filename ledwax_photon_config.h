@@ -10,7 +10,7 @@ namespace ledwaxconfig {
         uint8_t matrixHeight;
         uint8_t matrixWidth;
         uint8_t stripType;
-        uint8_t numPixels;
+        uint8_t stripNumPixels;
         uint8_t numColorsPerPixel;
         uint8_t *spiPins = NULL;
         uint16_t i2cAddy = 0;
@@ -22,7 +22,7 @@ namespace ledwaxconfig {
 
         LEDWaxConfig() {
             this->stripType = 0;
-            this->numPixels = 0;
+            this->stripNumPixels = 0;
             this->numColorsPerPixel = 0;
             this->matrix = false;
             this->matrixHeight = 0;
@@ -34,16 +34,16 @@ namespace ledwaxconfig {
             this->nativePWMPins = NULL;
         }
 
-        LEDWaxConfig(uint8_t stripType, uint8_t numPixels, uint8_t numColorsPerPixel, uint8_t *spiPins = NULL,
+        LEDWaxConfig(uint8_t stripType, uint8_t stripNumPixels, uint8_t numColorsPerPixel, uint8_t *spiPins = NULL,
                 uint16_t i2cAddy = 0, uint8_t *i2cPins = NULL, uint8_t *i2cPWMPins = NULL, uint8_t *nativePWMPins = NULL) {
             this->stripType = stripType;
-            this->numPixels = numPixels;
+            this->stripNumPixels = stripNumPixels;
             this->numColorsPerPixel = numColorsPerPixel;
             this->matrix = false;
             initMatrixDimensions(
                     matrix);
             this->matrixHeight = 1;
-            this->matrixWidth = numPixels;
+            this->matrixWidth = stripNumPixels;
             this->spiPins = spiPins;
             this->i2cAddy = i2cAddy;
             this->i2cPins = i2cPins;
@@ -51,11 +51,11 @@ namespace ledwaxconfig {
             this->nativePWMPins = nativePWMPins;
         }
 
-        LEDWaxConfig(uint8_t stripType, uint8_t numPixels, uint8_t numColorsPerPixel, bool matrix = false,
+        LEDWaxConfig(uint8_t stripType, uint8_t stripNumPixels, uint8_t numColorsPerPixel, bool matrix = false,
                 uint8_t matrixHeight = 1, uint8_t *spiPins = NULL, uint16_t i2cAddy = 0, uint8_t *i2cPins = NULL, uint8_t *i2cPWMPins = NULL,
                 uint8_t *nativePWMPins = NULL) {
             this->stripType = stripType;
-            this->numPixels = numPixels;
+            this->stripNumPixels = stripNumPixels;
             this->numColorsPerPixel = numColorsPerPixel;
             this->matrix = matrix;
             this->matrixHeight = matrixHeight;
@@ -75,14 +75,14 @@ namespace ledwaxconfig {
             if (matrix) {
                 this->matrixHeight = max(
                         this->matrixHeight, 1);
-                this->matrixWidth = this->numPixels / this->matrixHeight;
+                this->matrixWidth = this->stripNumPixels / this->matrixHeight;
                 if (this->matrixWidth < 1) {
                     this->matrixWidth = 1;
-                    this->matrixHeight = this->numPixels;
+                    this->matrixHeight = this->stripNumPixels;
                 }
             } else {
                 this->matrixHeight = 1;
-                this->matrixWidth = this->numPixels;
+                this->matrixWidth = this->stripNumPixels;
             }
         }
 
@@ -150,12 +150,12 @@ namespace ledwaxconfig {
             this->numColorsPerPixel = numColorsPerPixel;
         }
 
-        uint8_t getNumPixels() const {
-            return numPixels;
+        uint8_t getStripNumPixels() const {
+            return stripNumPixels;
         }
 
-        void setNumPixels(uint8_t numPixels) {
-            this->numPixels = numPixels;
+        void setStripNumPixels(uint8_t stripNumPixels) {
+            this->stripNumPixels = stripNumPixels;
         }
 
         uint8_t* getSpiPins() const {

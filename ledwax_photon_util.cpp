@@ -22,6 +22,8 @@ bool LEDWaxPhotonUtil::startsWith(const char *pre, const char *str) {
             pre, str, lenpre) == 0;
 }
 
+/**
+ * @return true if stripType is as addressable
 bool LEDWaxPhotonUtil::isAddressableStrip(uint8_t stripType) {
     bool ret = false;
     switch (stripType) {

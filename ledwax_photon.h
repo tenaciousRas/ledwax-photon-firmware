@@ -77,7 +77,7 @@ namespace ledwax {
 
         ledwaxconfig::LEDWaxConfig *stripConfigs;
         led_strip_disp_state *stripState;
-        char *ledModeColorJSONArr;    // ugh - stored for particle var
+        char *ledModeColorJSONArr;    // stored for particle var
         int16_t numStrips = 0;
         int16_t totalNumAddressablePixels = 0;
 //        uint8_t *stripType, *stripNumPixels, *stripNumColorsPerPixel;
