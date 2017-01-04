@@ -56,7 +56,7 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
     static ledwaxconfig::LEDWaxConfig* config = new ledwaxconfig::LEDWaxConfig[NUM_STRIPS];
     // *********** EDIT THIS SECTION ACCORDING TO HARDWARE ***********
     config[0].setStripType(STRIP_TYPE_WS2811);
-    config[0].setNumPixels(60);
+    config[0].setStripNumPixels(60);
     config[0].setNumColorsPerPixel(3);
     config[0].setSpiPins(new uint8_t[WIRE_NUM_SPI_1_WIRE]);
     config[0].getSpiPins()[0] = A5;
@@ -64,7 +64,7 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
     config[0].setMatrixHeight(8);
 
     config[1].setStripType(STRIP_TYPE_I2C_PWM);
-    config[1].setNumPixels(1);
+    config[1].setStripNumPixels(1);
     config[1].setNumColorsPerPixel(NUM_PIXELS_PER_LED_PWM_RGB_STRIP);
     config[1].setI2cAddy(0xE0);
     config[1].setI2cPwmPins(new uint8_t[NUM_PIXELS_PER_LED_PWM_RGB_STRIP]);
@@ -74,7 +74,7 @@ static inline ledwaxconfig::LEDWaxConfig*& init_strips() {
     config[1].setMatrix(false);
 
     config[2].setStripType(STRIP_TYPE_NATIVE_PWM);
-    config[2].setNumPixels(1);
+    config[2].setStripNumPixels(1);
     config[2].setNumColorsPerPixel(NUM_PIXELS_PER_LED_PWM_RGB_STRIP);
     config[2].setNativePwmPins(new uint8_t[NUM_PIXELS_PER_LED_PWM_RGB_STRIP]);
     config[2].getNativePwmPins()[0] = RX;
@@ -91,11 +91,9 @@ int numStrips = NUM_STRIPS;     //particle var
 ledwax::LEDWaxPhoton* LedWax = new LEDWaxPhoton(
         (uint8_t) numStrips, &STRIP_CONFIGS[0]);
 // particle vars = state members from LedWaxPhoton::led_strip_disp_state
-int remoteControlStripIndex, stripType, dispMode, ledFadeMode, ledModeColorIndex;
-char *ledModeColor = new char[620]; // return a string
-long multiColorHoldTime;
-long fadeTimeInterval;
-int ledStripBrightness;
+int remoteControlStripIndex, stripType, dispMode, ledFadeMode, ledModeColorIndex, ledStripBrightness, stripNumPixels, numColorsPerPixel;
+long multiColorHoldTime, fadeTimeInterval;
+char *ledModeColor = new char[VAR_SZ_LED_MODE_COLOR]; // dereference for particle string var
 
 void setup() {
     LedWax->begin();
@@ -113,6 +111,10 @@ void setup() {
             "stripIndex", &remoteControlStripIndex, INT);
     Particle.variable(
             "stripType", &stripType, INT);
+    Particle.variable(
+            "numPixels", &stripNumPixels, INT);
+    Particle.variable(
+            "numPixColors", &numColorsPerPixel, INT);
     Particle.variable(
             "dispMode", &dispMode, INT);
     Particle.variable(
@@ -150,11 +152,13 @@ void refreshParticleVars() {
 #endif
     remoteControlStripIndex = LedWax->remoteControlStripIndex;
     stripType = LedWax->stripConfigs[remoteControlStripIndex].getStripType();
+    stripNumPixels = LedWax->stripConfigs[remoteControlStripIndex].getStripNumPixels();
+    numColorsPerPixel = LedWax->stripConfigs[remoteControlStripIndex].getNumColorsPerPixel();
     dispMode = LedWax->stripState[remoteControlStripIndex].dispMode;
     ledFadeMode = LedWax->stripState[remoteControlStripIndex].ledFadeMode;
     LedWax->buildLedModeColorJSONArr(
             LedWax->remoteControlStripIndex);
-    memcpy(ledModeColor, LedWax->ledModeColorJSONArr, 620);
+    memcpy(ledModeColor, LedWax->ledModeColorJSONArr, VAR_SZ_LED_MODE_COLOR);
     ledModeColorIndex = LedWax->stripState[remoteControlStripIndex].ledModeColorIndex;
     multiColorHoldTime = LedWax->stripState[remoteControlStripIndex].multiColorHoldTime;
     fadeTimeInterval = LedWax->stripState[remoteControlStripIndex].fadeTimeInterval;
