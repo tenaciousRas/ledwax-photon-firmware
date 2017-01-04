@@ -89,7 +89,7 @@ The third strip (actually, just a single LED) is connected directly by the Photo
 
 In general it is difficult to use native PWM alongside SPI and/or I2C LED controllers.  This is due to the limitations on power draw.  There are also a limited number of PWM output pins.  Finally, several of the PWM output pins conflict with SPI and I2C pins (interfaces) on the Photon.  *It is not possible to double-purpose a pin.*  For example it is not possible to configure a pin to be used for SPI and native PWM.
 
-Native PWM output from the Photon can be combined with a MOSFET circuit, as with a PCA9685, to drive the maximum number of LEDs with a seperate power supply.  The same circuit (i.e. fet-board) can be used in both configurations.
+Native PWM output from the Photon can be combined with a MOSFET circuit, as with a PCA9685, to drive the maximum number of LEDs with a separate power supply.  The same circuit (i.e. fet-board) can be used in both configurations.
 
 # Firmware Usage
 Setup LEDWax Photon with a LED strip and a Particle Photon.  Then control the strip using the exposed REST API.  Send HTTP POST commands to change color, display mode, animation, etc.  Issue HTTP GET requests to discover LEDWax configuration data, such as number of strips, display mode, colors, etc.
@@ -113,6 +113,8 @@ LEDWax-Photon is built for the Photon so REST API [variables](https://docs.parti
 The following particle cloud variables are exposed:
 * "numStrips": "int32" - number of LED strips configured in firmware
 * "stripIndex": "int32" - current strip being controlled 
+* "numPixels": "int32" - number of pixels on the LED strip
+* "numPixColors": "int32" - number of colors per pixel
 * "stripType": "int32" - type of (current) strip
 * "dispMode": "int32" - display mode of (current) strip
 * "modeColor": "string" - A a JSON array representing the colors assigned to current mode of (current) strip.  For example, [FF, A5D5, 00].
@@ -141,21 +143,21 @@ There is no space between the command-name and cmd-value(s).  All commands requi
 
 >	idx : set stripIndex - the current strip being controlled.  All following commands will be executed against this LED strip.  Valid values are 0 - (NUM_STRIPS - 1).  Default is 0.
 
->	col : set modeColor - the LED pixel color.  cmd-value must ahere to the following format:
+>	col : set modeColor - the LED pixel color.  cmd-value must adhere to the following format:
 
 >		[mode-color-index],[24-bit-integer]
 >	where mode-color-index is the index of the mode color (family 1 display mode) to set
 >	valid color values are 0 - 16777215 (24-bit integer)
 
->	brt : set brightness - the strip brightness. Valid values are from 0 (0% = full off) to 1023 (100% = full on).  NOTE:  even though brightness is stored as a 10-bit value, it is currently displayed as an 8-bit value.  Thus a value of 1023 in 10-bit storage corresponds to a display value of 255 in brightness.  Brightness is stored sepearately from color in firmware.
+>	brt : set brightness - the strip brightness. Valid values are from 0 (0% = full off) to 1023 (100% = full on).  NOTE:  even though brightness is stored as a 10-bit value, it is currently displayed as an 8-bit value.  Thus a value of 1023 in 10-bit storage corresponds to a display value of 255 in brightness.  Brightness is stored separately from color in firmware.
 
 >	mod : set dispMode - the strip display mode.  Valid values are:
 
 >		0. solid color (default) : 1 user-defined color displayed on strip
->		1. fade terawatt industries colors : display TW colors, across entire strip - alernate entire strip bewtween colors
->		2. fade random colors : display 2 random colors, across entire strip - alernate entire strip bewtween colors
->		10. fade two colors : display 2 user-defined colors, across entire strip - alernate entire strip bewtween colors
->		11. fade three colors : display 3 user-defined colors, across entire strip - alernate entire strip bewtween colors
+>		1. fade terawatt industries colors : display TW colors, across entire strip - alternate entire strip between colors
+>		2. fade random colors : display 2 random colors, across entire strip - alternate entire strip between colors
+>		10. fade two colors : display 2 user-defined colors, across entire strip - alternate entire strip between colors
+>		11. fade three colors : display 3 user-defined colors, across entire strip - alternate entire strip between colors
 >		12. two alternating colors : 2 user-defined colors, displayed on alternating pixels
 >		13. terawatt industries alternating colors : TW colors, displayed on alternating pixels
 >		14. three alternating colors : 3 user-defined colors, displayed on alternating pixels
@@ -201,20 +203,20 @@ Setting up a circuit with some LEDs isn't too difficult.  If you've never setup 
 
 The latest version of this firmware is intended for a PWM driver IC to extend the PWM output capabilities of the Photon.  The PWM driver should connect to the I2C interface of the photon.
 
-This project is intended for serious amateur usage.  The user of this software assumes all resposibility.  By using this software you agree to its terms and conditions.  See LICENSE.txt.
+This project is intended for serious amateur usage.  The user of this software assumes all responsibility.  By using this software you agree to its terms and conditions.  See LICENSE.txt.
 
 I've designed a custom PCB which is undergoing testing so this can be assembled more easily.  The PCB makes it easier to setup different types of LED strips with a Photon.
 
 # Efficiency
 LEDWax is designed and built to support a heap of LEDs and LED-strips of varying types.  The primary focus is on support for LED-driver chips, and particularly those chips which independently maintain state - such as WS2801 and PCA9685.  With these ICs, LEDWax can issue a command to set color/brightness to the LED driver, and the driver holds that setting until it gets a new command.  Note that Photon native PWM behaves the same way.  LEDWax takes advantage of this architecture to reduce the amount of work it has to do.  This means it can drive more LED-strips with smoother animations.
 
-LEDWax should be capable of driving hudreds, perhaps thousands, of individual pixels (TBD).  For a theoretical example:  up to 62 PCA9685 ICs can be chained together to control up to 992 PWM outputs (pixels); and a single SPI port can control hundreds/thousands of LEDs (or more, SPI range is limited by distance and signal speed).
+LEDWax should be capable of driving hundreds, perhaps thousands, of individual pixels (TBD).  For a theoretical example:  up to 62 PCA9685 ICs can be chained together to control up to 992 PWM outputs (pixels); and a single SPI port can control hundreds/thousands of LEDs (or more, SPI range is limited by distance and signal speed).
 
 Still, there are real-world constraints on this.  I'm not sure how many strips LEDWax can drive simultaneously before noticeable latency occurs.  Actually, the number of strips isn't the main constraint, but rather - the number of distinctly addressable pixels defined in the strip firmware configuration.  Each pixel gets its own memory space and color processing.  The actual limits on memory are unknown (TBD - currently at least 1.5kB per 100 pixels!), as are baseline processing costs, but these are the heaviest factors.
 
 Once pixel memory has been processed, which only happens when it needs to, then the pixel data is sent to the connected interface - SPI, I2C, or native PWM.  The amount of time spent sending signals on the output interfaces may be non-negligible.  If SPI-bus interface-speed is 8mhz, then in theory the bus can transmit 1mB/s; so if each RGB LED on a strip takes three bytes of data, then in theory an SPI interface can address 333.3k LEDs per second.  Human beings start to notice visual latency at about 50ms of delay (actually less).  Using these parameters (port speed, latency limit) the effective length of an RGB LED strip that can change color all-at-once, without a (50ms) flicker of visible latency, is about 1667 pixels.  If the LED strip was actually 333.3k LEDs long, it would take one second for the entire strip to change color, at the fastest.  We have ignored any relationship(s) between viewing angle and visual latency, but obviously there are constraints.  On top of the theoretical limits, the CPU is busy processing memory and data, so things are naturally slower.
 
-I2C interfaces work simlarly, with direct addressing they can be faster, but the number of addresss is limited.  Either way, maximum efficiency is achieved when SPI and/or I2C interfaces use the builtin hardware-based GPIO provided by the Photon.
+I2C interfaces work similarly, with direct addressing they can be faster, but the number of address is limited.  Either way, maximum efficiency is achieved when SPI and/or I2C interfaces use the builtin hardware-based GPIO provided by the Photon.
 
 NOTE:  Unfortunately the FastLED library might use software-based GPIO.  This means LEDWax must wait for the library to clock all of the data to the target bus (SPI).  The time spent clocking the data is proportional to the number of pixels attached to the bus.  In the example above with 8mhz bus, using a 60-LED RGB WS2811 strip, the time spent clocking data is at least 180us (microseconds).
 ***
@@ -262,7 +264,7 @@ Eclipse is the primary IDE (supported).  Follow the installation instructions th
   * Expand C/C++
   * Choose Makefile Project with Existing Code -- click Next
   * Name the project
-  * Browse to the folder contianing this project
+  * Browse to the folder containing this project
   * Choose "Cross ARM GCC" as the compiler type (GNU ARM EABI plugin)
   * Complete the Wizard
 - Once the project is imported, set the PATH to your Spark Firmware folder:
